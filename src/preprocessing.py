@@ -20,6 +20,66 @@ def impute_categorical_mode(df: pd.DataFrame, columns: List[str]) -> pd.DataFram
             df_imputed[col].fillna(mode_val, inplace=True)
     return df_imputed
 
+def impute_tiki_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Handle missing values specifically for the Tiki dataset.
+    - Fills categorical missing values with 'Unknown'.
+    - Fills numerical missing values (counts/rates) with 0.
+    """
+    df = df.copy()
+    
+    # Fill categorical columns
+    df['brand'] = df['brand'].fillna("Unknown")
+    df['category'] = df['category'].fillna("Unknown")
+
+    # Fill numerical features
+    num_cols = ['discount_rate', 'rating_average', 'review_count', 'quantity_sold']
+    for col in num_cols:
+        if col in df.columns:
+            df[col] = df[col].fillna(0)
+            
+    return df
+
+def impute_ebay_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Handle missing values specifically for the eBay dataset.
+    - Drops columns with >90% missing data.
+    - Uses Mode imputation for categories and Median/Zero for numericals.
+    """
+    df = df.copy()
+    
+    # Drop high missing value columns
+    cols_to_drop = ['subtitle', 'item_end_date'] 
+    df = df.drop(columns=[c for c in cols_to_drop if c in df.columns])
+
+    # Mode Imputation
+    cat_cols = ['shipping_currency', 'item_location_postal', 'item_location_country', 'condition_id']
+    for col in cat_cols:
+        if col in df.columns:
+            mode_val = df[col].mode().iloc[0]
+            df[col] = df[col].fillna(mode_val)
+
+    # Explicit 'Unknown' filling
+    for col in ['seller_username', 'category_path', 'condition']:
+        if col in df.columns:
+            df[col] = df[col].fillna('Unknown')
+
+    # Zero / Median Imputation
+    if 'shipping_cost' in df.columns:
+        df['shipping_cost'] = df['shipping_cost'].fillna(0)
+        
+    for col in ['seller_feedback_score', 'seller_feedback_percent']:
+        if col in df.columns:
+            median_val = df[col].median()
+            df[col] = df[col].fillna(median_val)
+
+    # Placeholder Imputation for Image URLs
+    for col in ['image_url', 'thumbnail_url']:
+        if col in df.columns:
+            df[col] = df[col].fillna("Not Available")
+            
+    return df
+
 def engineer_tiki_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Generate new business features for Tiki dataset.
