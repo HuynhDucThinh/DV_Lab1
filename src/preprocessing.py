@@ -80,6 +80,36 @@ def impute_ebay_data(df: pd.DataFrame) -> pd.DataFrame:
             
     return df
 
+def cap_outliers_percentile(df: pd.DataFrame, columns: List[str], upper_percentile: float = 0.99) -> pd.DataFrame:
+    """
+    Cap extreme high outliers at a specific percentile.
+
+    This function applies Winsorization to the specified columns, limiting
+    extreme upper values to the value at the given percentile. It prevents
+    outliers from distorting aggregations and ML models without deleting records.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input DataFrame.
+    columns : List[str]
+        List of numerical column names to apply capping.
+    upper_percentile : float, optional (default=0.99)
+        The percentile threshold for capping (e.g., 0.99 means 99th percentile).
+
+    Returns
+    -------
+    pd.DataFrame
+        A new DataFrame with capped values.
+    """
+    df_cleaned = df.copy()
+    for col in columns:
+        if col in df_cleaned.columns:
+            upper_limit = df_cleaned[col].quantile(upper_percentile)
+            # Clip upper limits using np.clip, leave lower limits intact (a_min=None)
+            df_cleaned[col] = np.clip(df_cleaned[col], a_min=None, a_max=upper_limit)
+    return df_cleaned
+
 def engineer_tiki_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Generate new business features for Tiki dataset.
