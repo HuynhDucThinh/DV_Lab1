@@ -112,17 +112,23 @@ def cap_outliers_percentile(df: pd.DataFrame, columns: List[str], upper_percenti
 
 def engineer_tiki_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Generate new business features for Tiki dataset.
+    Generate new business features for the Tiki dataset.
     """
     df_feat = df.copy()
     
     # 1. Discount_Segment
     if 'discount_rate' in df_feat.columns:
-        bins = [-np.inf, 0, 20, 50, np.inf]
-        labels = ['0%', '< 20%', '20-50%', '> 50%']
-        df_feat['Discount_Segment'] = pd.cut(df_feat['discount_rate'], bins=bins, labels=labels, right=True)
-        # Fix exact 0% mapping if needed, as pd.cut includes right edge
-        df_feat.loc[df_feat['discount_rate'] == 0, 'Discount_Segment'] = '0%'
+        # Use np.select to define clear business logic for discount segmentation
+        conditions = [
+            (df_feat['discount_rate'] == 0),
+            (df_feat['discount_rate'] > 0) & (df_feat['discount_rate'] < 20),
+            (df_feat['discount_rate'] >= 20) & (df_feat['discount_rate'] <= 50),
+            (df_feat['discount_rate'] > 50)
+        ]
+        choices = ['0%', '< 20%', '20-50%', '> 50%']
+        
+        # default='Unknow' helps to catch any unexpected NaN values that might have been missed during imputation
+        df_feat['Discount_Segment'] = np.select(conditions, choices, default='Unknown')
         
     # 2. Is_Best_Seller
     if 'quantity_sold' in df_feat.columns:
@@ -132,25 +138,30 @@ def engineer_tiki_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def engineer_ebay_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Generate new business features for eBay dataset.
+    Generate new business features for the eBay dataset.
     """
     df_feat = df.copy()
     
-    # 1. Total_Cost_VND (assuming USD to VND rate = 25000)
+    # 1. Total_Cost_VND (Assuming USD to VND rate = 26,000)
     if 'price' in df_feat.columns and 'shipping_cost' in df_feat.columns:
-        df_feat['Total_Cost_VND'] = (df_feat['price'].fillna(0) + df_feat['shipping_cost'].fillna(0)) * 25000
+        total_usd = df_feat['price'].fillna(0) + df_feat['shipping_cost'].fillna(0)
+        df_feat['Total_Cost_VND'] = total_usd * 25000
         
     # 2. Listing_Duration_Days
     if 'item_end_date' in df_feat.columns and 'item_creation_date' in df_feat.columns:
-        duration = (pd.to_datetime(df_feat['item_end_date']) - pd.to_datetime(df_feat['item_creation_date'])).dt.days
-        df_feat['Listing_Duration_Days'] = duration.fillna(-1) # -1 for missing
+        end_date = pd.to_datetime(df_feat['item_end_date'], errors='coerce')
+        start_date = pd.to_datetime(df_feat['item_creation_date'], errors='coerce')
+        df_feat['Listing_Duration_Days'] = (end_date - start_date).dt.days
         
     # 3. Trust_Level
     if 'seller_feedback_percent' in df_feat.columns:
-        df_feat['Trust_Level'] = np.where(df_feat['seller_feedback_percent'] > 98, 'High Trust', 'Normal/Low Trust')
-        # Handle cases where percent was missing originally if needed
-        mask_missing = df_feat['seller_feedback_percent'].isnull()
-        df_feat.loc[mask_missing, 'Trust_Level'] = 'Unknown'
+        conditions = [
+            df_feat['seller_feedback_percent'].isnull(),
+            df_feat['seller_feedback_percent'] > 98.0
+        ]
+        choices = ['Unknown', 'High Trust']
+        
+        df_feat['Trust_Level'] = np.select(conditions, choices, default='Normal/Low Trust')
         
     return df_feat
 
