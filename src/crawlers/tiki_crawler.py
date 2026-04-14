@@ -14,13 +14,13 @@ CHECKPOINT_FILE = "tiki_checkpoint.json"
 BACKUP_FILE = "backup.csv"
 OUTPUT_FILE = "products.csv"
 
-# Nhiều danh mục phổ biến để tăng độ phủ dữ liệu
+# Multiple popular categories to increase data coverage
 CATEGORY_IDS = [
     8322, 4384, 1883, 1882, 1815, 931, 2549, 1520, 1789, 1703,
     4221, 915, 8594, 27498, 44792, 8400, 8596, 976, 6000, 11612,
 ]
 
-# Từ khóa phổ biến để quét thêm nếu danh mục bị giới hạn
+# Popular keywords for additional scraping if categories are limited
 SEARCH_KEYWORDS = [
     "dien thoai", "laptop", "tai nghe", "sach", "do gia dung",
     "my pham", "thoi trang", "me va be", "do choi", "thuc pham",
@@ -93,7 +93,7 @@ def collect_product_ids(session, target_count, max_pages_per_source=120):
     product_ids = set()
     wanted_ids = int(target_count * 1.4)
 
-    print("--- BƯỚC 1: Thu thập Product IDs ---")
+    print("--- STEP 1: Collecting Product IDs ---")
 
     for category_id in CATEGORY_IDS:
         for page in range(1, max_pages_per_source + 1):
@@ -110,7 +110,7 @@ def collect_product_ids(session, target_count, max_pages_per_source=120):
             try:
                 data = safe_get_json(session, LIST_ENDPOINT, params=params).get("data", [])
             except requests.RequestException as error:
-                print(f"[WARN] Lỗi danh mục {category_id} trang {page}: {error}")
+                print(f"[WARN] Category {category_id} page {page} error: {error}")
                 time.sleep(random.uniform(1.5, 2.8))
                 continue
 
@@ -123,8 +123,8 @@ def collect_product_ids(session, target_count, max_pages_per_source=120):
                     product_ids.add(product_id)
 
             print(
-                f"Danh mục {category_id} - Trang {page}: "
-                f"{len(product_ids)} IDs độc nhất"
+                f"Category {category_id} - Page {page}: "
+                f"{len(product_ids)} unique IDs"
             )
             time.sleep(random.uniform(0.25, 0.6))
 
@@ -142,7 +142,7 @@ def collect_product_ids(session, target_count, max_pages_per_source=120):
             try:
                 data = safe_get_json(session, LIST_ENDPOINT, params=params).get("data", [])
             except requests.RequestException as error:
-                print(f"[WARN] Lỗi keyword '{keyword}' trang {page}: {error}")
+                print(f"[WARN] Keyword '{keyword}' page {page} error: {error}")
                 time.sleep(random.uniform(1.5, 2.8))
                 continue
 
@@ -155,8 +155,8 @@ def collect_product_ids(session, target_count, max_pages_per_source=120):
                     product_ids.add(product_id)
 
             print(
-                f"Keyword '{keyword}' - Trang {page}: "
-                f"{len(product_ids)} IDs độc nhất"
+                f"Keyword '{keyword}' - Page {page}: "
+                f"{len(product_ids)} unique IDs"
             )
             time.sleep(random.uniform(0.25, 0.6))
 
@@ -206,7 +206,7 @@ def scrape_tiki_massive(target_count=10000, max_pages_per_source=120):
         )
         product_ids.update(collected_ids)
 
-    print(f"Tổng ID độc nhất hiện có: {len(product_ids)}")
+    print(f"Total unique IDs collected: {len(product_ids)}")
 
     detailed_data = []
     if completed_ids:
@@ -216,7 +216,7 @@ def scrape_tiki_massive(target_count=10000, max_pages_per_source=120):
         except (FileNotFoundError, pd.errors.EmptyDataError):
             detailed_data = []
 
-    print("\n--- BƯỚC 2: Tải dữ liệu chi tiết ---")
+    print("\n--- STEP 2: Fetching detailed data ---")
 
     available_ids = [product_id for product_id in product_ids if product_id not in completed_ids]
     random.shuffle(available_ids)
@@ -235,12 +235,12 @@ def scrape_tiki_massive(target_count=10000, max_pages_per_source=120):
 
         except requests.RequestException as error:
             failed_ids.add(product_id)
-            print(f"[WARN] Lỗi tải chi tiết ID {product_id}: {error}")
+            print(f"[WARN] Error loading details for ID {product_id}: {error}")
 
         if index % 100 == 0:
             print(
-                f"Tiến độ: {len(completed_ids)}/{target_count} sản phẩm, "
-                f"lỗi: {len(failed_ids)}"
+                f"Progress: {len(completed_ids)}/{target_count} products, "
+                f"{len(failed_ids)} errors"
             )
             write_backup(detailed_data)
             save_checkpoint(product_ids, completed_ids, failed_ids)
@@ -254,22 +254,22 @@ def scrape_tiki_massive(target_count=10000, max_pages_per_source=120):
     write_backup(final_df.to_dict(orient="records"))
     save_checkpoint(product_ids, set(final_df["id"].tolist()), failed_ids)
 
-    print(f"Hoàn tất: đã lưu {len(final_df)} sản phẩm vào {OUTPUT_FILE}")
+    print(f"Completed: saved {len(final_df)} products to {OUTPUT_FILE}")
     if len(final_df) < target_count:
         print(
-            "[INFO] Chưa đủ target trong 1 lần chạy. "
-            "Hãy chạy lại script để tiếp tục từ checkpoint."
+            "[INFO] Did not reach target in single run. "
+            "Re-run the script to continue from checkpoint."
         )
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Tiki crawler lấy số lượng lớn sản phẩm")
-    parser.add_argument("--target", type=int, default=10000, help="Số lượng sản phẩm mục tiêu")
+    parser = argparse.ArgumentParser(description="Tiki crawler for large-scale product collection")
+    parser.add_argument("--target", type=int, default=10000, help="Target number of products")
     parser.add_argument(
         "--max-pages",
         type=int,
         default=120,
-        help="Số trang tối đa cho mỗi nguồn (category/keyword)",
+        help="Maximum pages per source (category/keyword)",
     )
     return parser.parse_args()
 
