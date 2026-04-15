@@ -79,7 +79,7 @@ def render_tiki_cold_start(df_fact_tiki: pd.DataFrame, df_product: pd.DataFrame,
         template="plotly_white", 
         margin=dict(t=40, b=0, l=0, r=0),
         bargap=0.02, # Touching bars to group elements visually
-        xaxis_tickangle=-45,
+        xaxis_tickangle=-35,
         yaxis=dict(
             title="Product Count", 
             showgrid=False
