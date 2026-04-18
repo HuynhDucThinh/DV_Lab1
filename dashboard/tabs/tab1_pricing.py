@@ -40,6 +40,151 @@ def _apply_global_filters(df_tiki: pd.DataFrame, df_ebay: pd.DataFrame, filters:
 
 	return tiki_filtered, ebay_filtered
 
+
+def render_tiki_price_segments(df_tiki: pd.DataFrame) -> None:
+	"""Render histogram and boxplot to show popular Tiki price segments."""
+	st.subheader("1. Tiki Focus: Price Segment Distribution")
+
+	if df_tiki.empty:
+		st.info("No Tiki data available under current global filters.")
+		return
+
+	bins = st.slider("Histogram bins (Tiki)", min_value=10, max_value=80, value=35, step=5)
+
+	price_values = df_tiki["price"].to_numpy()
+	hist_counts, hist_edges = np.histogram(price_values, bins=bins)
+	max_bin_idx = int(np.argmax(hist_counts))
+	popular_low = hist_edges[max_bin_idx]
+	popular_high = hist_edges[max_bin_idx + 1]
+
+	col1, col2 = st.columns(2)
+	col1.metric("Tiki Listings", f"{len(df_tiki):,}")
+	col2.metric("Most Popular Price Bin", f"{popular_low:,.0f} - {popular_high:,.0f} VND")
+
+	chart_col1, chart_col2 = st.columns([3, 2])
+
+	with chart_col1:
+		fig_hist = px.histogram(
+			df_tiki,
+			x="price",
+			nbins=bins,
+			title="Histogram of Tiki Prices",
+			labels={"price": "Price (VND)", "count": "Number of Listings"},
+			color_discrete_sequence=["#14b8a6"],
+		)
+		fig_hist.add_vrect(
+			x0=popular_low,
+			x1=popular_high,
+			fillcolor="#f59e0b",
+			opacity=0.18,
+			line_width=0,
+			annotation_text="Most common segment",
+			annotation_position="top left",
+		)
+		fig_hist.update_layout(template="plotly_white", bargap=0.05, margin=dict(t=60, l=20, r=20, b=20))
+		st.plotly_chart(fig_hist, width="stretch")
+
+	with chart_col2:
+		fig_box = px.box(
+			df_tiki,
+			y="price",
+			points="outliers",
+			title="Boxplot of Tiki Prices",
+			labels={"price": "Price (VND)"},
+			color_discrete_sequence=["#0f766e"],
+		)
+		fig_box.update_layout(template="plotly_white", margin=dict(t=60, l=20, r=20, b=20), showlegend=False)
+		st.plotly_chart(fig_box, width="stretch")
+
+
+def render_tiki_discount_bestseller(df_tiki: pd.DataFrame) -> None:
+	"""Render grouped bar chart by discount segment with best-seller ratio overlay."""
+	st.subheader("2. Tiki Focus: Discount Segment vs Best Seller Ratio")
+
+	if df_tiki.empty:
+		st.info("No Tiki data available under current global filters.")
+		return
+
+	discount_options = sorted(df_tiki["Discount_Segment"].dropna().astype(str).unique().tolist())
+	if not discount_options:
+		st.warning("Discount segment data is missing in Tiki listings.")
+		return
+
+	selected_segments = st.multiselect(
+		"Discount segment filter",
+		options=discount_options,
+		default=discount_options,
+		help="Choose discount segments to inspect best seller behavior.",
+	)
+	min_group_size = st.slider("Minimum listings per segment", min_value=1, max_value=500, value=20, step=1)
+
+	filtered = df_tiki[df_tiki["Discount_Segment"].astype(str).isin(selected_segments)].copy()
+	if filtered.empty:
+		st.info("No records match the selected discount segments.")
+		return
+
+	filtered["Is_Best_Seller"] = pd.to_numeric(filtered["Is_Best_Seller"], errors="coerce").fillna(0).astype(int)
+
+	summary = (
+		filtered.groupby("Discount_Segment", as_index=False)
+		.agg(
+			Total_Listings=("product_id", "count"),
+			Best_Seller=("Is_Best_Seller", "sum"),
+		)
+		.sort_values("Discount_Segment")
+	)
+	summary = summary[summary["Total_Listings"] >= min_group_size].copy()
+
+	if summary.empty:
+		st.info("No discount segment passes the minimum listing threshold.")
+		return
+
+	summary["Non_Best_Seller"] = summary["Total_Listings"] - summary["Best_Seller"]
+	summary["Best_Seller_Rate"] = (summary["Best_Seller"] / summary["Total_Listings"]) * 100
+
+	fig = go.Figure()
+	fig.add_trace(
+		go.Bar(
+			x=summary["Discount_Segment"],
+			y=summary["Best_Seller"],
+			name="Best Seller",
+			marker_color="#f97316",
+		)
+	)
+	fig.add_trace(
+		go.Bar(
+			x=summary["Discount_Segment"],
+			y=summary["Non_Best_Seller"],
+			name="Non Best Seller",
+			marker_color="#cbd5e1",
+		)
+	)
+	fig.add_trace(
+		go.Scatter(
+			x=summary["Discount_Segment"],
+			y=summary["Best_Seller_Rate"],
+			name="Best Seller Rate (%)",
+			yaxis="y2",
+			mode="lines+markers+text",
+			text=[f"{v:.1f}%" for v in summary["Best_Seller_Rate"]],
+			textposition="top center",
+			line=dict(color="#0f172a", width=2),
+			marker=dict(size=7),
+		)
+	)
+	fig.update_layout(
+		template="plotly_white",
+		barmode="group",
+		title="Grouped Bar by Discount Segment with Best Seller Ratio",
+		xaxis_title="Discount Segment",
+		yaxis_title="Listing Count",
+		yaxis2=dict(title="Best Seller Rate (%)", overlaying="y", side="right", range=[0, 100]),
+		legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+		margin=dict(t=70, l=20, r=20, b=20),
+	)
+	st.plotly_chart(fig, width="stretch")
+
+
 def render_ebay_violin_box(df_ebay: pd.DataFrame) -> None:
 	"""Render combined violin + box traces to show eBay price volatility."""
 	st.subheader("3. eBay Focus: Price Volatility (Violin + Box)")
@@ -200,6 +345,14 @@ def render(filters: Dict[str, Any]) -> None:
 	df_ebay = _clean_numeric_columns(df_ebay, ["price", "shipping_cost", "Total_Cost_VND"])
 
 	df_tiki_filtered, df_ebay_filtered = _apply_global_filters(df_tiki, df_ebay, filters)
+
+	with st.container():
+		render_tiki_price_segments(df_tiki_filtered)
+
+	st.divider()
+
+	with st.container():
+		render_tiki_discount_bestseller(df_tiki_filtered)
 
 	st.divider()
 
