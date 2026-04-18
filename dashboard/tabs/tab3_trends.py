@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, List
 
-
+# DATA LOADING & PREPROCESSING UTILS
 @st.cache_data
 def load_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Loads and caches datasets into memory to avoid continuous reloading."""
@@ -15,11 +15,43 @@ def load_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
     df_category = pd.read_csv(f"{data_dir}/dim_category.csv")
     return df_fact_tiki, df_fact_ebay, df_product, df_category
 
+def _clean_numeric_columns(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
+    """Ensures target columns are numeric and drops rows with invalid values."""
+    cleaned = df.copy()
+    for col in cols:
+        if col in cleaned.columns:
+            cleaned[col] = pd.to_numeric(cleaned[col], errors="coerce")
+    return cleaned.dropna(subset=cols)
+
+def _apply_global_filters(df_tiki: pd.DataFrame, df_ebay: pd.DataFrame, filters: Dict[str, Any]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Applies platform and price range filters globally to the datasets."""
+    selected_platforms = filters.get("platform", ["Tiki", "eBay"])
+    min_price, max_price = filters.get("price_range", (0, 50_000_000))
+
+    # Apply filters to Tiki
+    if "Tiki" in selected_platforms:
+        tiki_filtered = df_tiki[(df_tiki["price"] >= min_price) & (df_tiki["price"] <= max_price)].copy()
+    else:
+        tiki_filtered = df_tiki.iloc[0:0].copy() # Return empty dataframe keeping schema
+
+    # Apply filters to eBay
+    if "eBay" in selected_platforms:
+        ebay_filtered = df_ebay[(df_ebay["Total_Cost_VND"] >= min_price) & (df_ebay["Total_Cost_VND"] <= max_price)].copy()
+    else:
+        ebay_filtered = df_ebay.iloc[0:0].copy()
+
+    return tiki_filtered, ebay_filtered
+
 
 # 1. TIKI COLD-START (OBJECTIVE 1)
 def render_tiki_cold_start(df_fact_tiki: pd.DataFrame, df_product: pd.DataFrame, df_category: pd.DataFrame) -> None:
     st.subheader("1. Tiki Ecosystem: Product Stagnation Risk")
     
+    # Defensive check: Prevent execution if global filters removed all data
+    if df_fact_tiki.empty:
+        st.info("No Tiki listings match the current global filters. Please adjust the sidebar settings.")
+        return
+
     # Data Processing
     df_merged = df_fact_tiki.merge(df_product[['product_id', 'category_id']], on='product_id')
     df_merged = df_merged.merge(df_category, on='category_id')
@@ -30,6 +62,10 @@ def render_tiki_cold_start(df_fact_tiki: pd.DataFrame, df_product: pd.DataFrame,
     # Isolate cold-start products (0 sold, 0 reviews)
     cold_start_df = df_merged[(df_merged['quantity_sold'] == 0) & (df_merged['review_count'] == 0)]
     
+    if cold_start_df.empty:
+        st.success("Great! No cold-start products found within this price range.")
+        return
+
     # Calculate cumulative percentage for the Pareto chart
     cat_counts = cold_start_df['category'].value_counts().reset_index()
     cat_counts.columns = ['Category', 'Count']
@@ -97,7 +133,6 @@ def render_tiki_cold_start(df_fact_tiki: pd.DataFrame, df_product: pd.DataFrame,
         height=550
     )
     
-    # FIXED: Replaced deprecated use_container_width with width="stretch"
     st.plotly_chart(fig, width="stretch")
 
     # Actionable Insights
@@ -106,7 +141,7 @@ def render_tiki_cold_start(df_fact_tiki: pd.DataFrame, df_product: pd.DataFrame,
             st.write(f"""
             **Chart Analysis:**
             * After filtering out data noise, the top 3 highest-risk categories are: **{plot_df.iloc[0]['Category']}**, **{plot_df.iloc[1]['Category']}**, and **{plot_df.iloc[2]['Category']}**.
-            * The top 20 categories alone account for **{plot_df.iloc[-1]['Cumulative_Perc']:.1f}%** of the total stagnant inventory on the platform.
+            * The top 20 categories alone account for **{plot_df.iloc[-1]['Cumulative_Perc']:.1f}%** of the total stagnant inventory within the selected parameters.
             
             **Recommended Next Steps:**
             To optimize operational efficiency, rather than distributing the marketing budget evenly, the team should perform a root-cause analysis focusing on the **{plot_df.iloc[0]['Category']}** category. This will help determine whether the primary barrier is pricing or a lack of promotional campaigns.
@@ -116,6 +151,11 @@ def render_tiki_cold_start(df_fact_tiki: pd.DataFrame, df_product: pd.DataFrame,
 def render_ebay_condition_analysis(df_fact_ebay: pd.DataFrame) -> None:
     st.subheader("2. eBay Ecosystem: Condition Distribution & Cost Impact")
     
+    # Defensive check
+    if df_fact_ebay.empty:
+        st.info("No eBay listings match the current global filters. Please adjust the sidebar settings.")
+        return
+
     # Data Processing
     def categorize_condition(cond):
         cond = str(cond).lower()
@@ -129,6 +169,10 @@ def render_ebay_condition_analysis(df_fact_ebay: pd.DataFrame) -> None:
 
     df_fact_ebay['Standard_Condition'] = df_fact_ebay['condition'].apply(categorize_condition)
     df_clean = df_fact_ebay[df_fact_ebay['Standard_Condition'] != 'Other/Parts'].copy()
+
+    if df_clean.empty:
+        st.warning("Insufficient valid condition data within this price range.")
+        return
 
     # Calculate Market Share
     df_market = df_clean['Standard_Condition'].value_counts().reset_index()
@@ -174,7 +218,6 @@ def render_ebay_condition_analysis(df_fact_ebay: pd.DataFrame) -> None:
             marker=dict(line=dict(color='white', width=2)) 
         )
         fig_tree.update_layout(margin=dict(t=0, l=0, r=0, b=0))
-        
         st.plotly_chart(fig_tree, width="stretch")
         
     with col_bar:
@@ -212,23 +255,23 @@ def render_ebay_condition_analysis(df_fact_ebay: pd.DataFrame) -> None:
             textfont=dict(size=12, color='#334155'),
             cliponaxis=False
         )
-        
         st.plotly_chart(fig_bar, width="stretch")
 
     # Actionable Insights
     with st.expander("Chart Insights & Actionable Recommendations"):
-        lowest_cost_cond = df_cost.iloc[0]['Condition']
-        highest_cost_cond = df_cost.iloc[-1]['Condition']
-        
-        st.write(f"""
-        **Chart Analysis:**
-        * The **{dominant_segment}** segment leads the ecosystem, capturing **{dominant_perc:.1f}%** of the total market share.
-        * Interestingly, there is an inverse relationship in pricing dynamics: the **{lowest_cost_cond}** segment has the lowest average cost, whereas the **{highest_cost_cond}** segment commands the highest average cost.
-        
-        **Recommended Sourcing Strategy:**
-        * Consumer behavior on this C2C/B2C platform suggests a preference for '{lowest_cost_cond}' items in the budget-friendly tier, but a pivot to '{highest_cost_cond}' or 'Used' options for high-value premium electronics (to optimize spending).
-        * To maximize profit margins, retailers should focus on stocking **{lowest_cost_cond}** inventory for entry-level products, while aggressively sourcing **{highest_cost_cond}** items to capture the high-end market segment.
-        """)
+        if not df_cost.empty:
+            lowest_cost_cond = df_cost.iloc[0]['Condition']
+            highest_cost_cond = df_cost.iloc[-1]['Condition']
+            
+            st.write(f"""
+            **Chart Analysis:**
+            * The **{dominant_segment}** segment leads the ecosystem within the filtered parameters, capturing **{dominant_perc:.1f}%** of the market share.
+            * Interestingly, there is an inverse relationship in pricing dynamics: the **{lowest_cost_cond}** segment has the lowest average cost, whereas the **{highest_cost_cond}** segment commands the highest average cost.
+            
+            **Recommended Sourcing Strategy:**
+            * Consumer behavior suggests a preference for '{lowest_cost_cond}' items in the budget-friendly tier, but a pivot to '{highest_cost_cond}' or 'Used' options for high-value premium items.
+            * To maximize profit margins, retailers should focus on stocking **{lowest_cost_cond}** inventory for entry-level products, while aggressively sourcing **{highest_cost_cond}** items to capture the high-end market segment.
+            """)
 
 # ==========================================
 # MAIN RENDER FUNCTION (Invoked by app.py)
@@ -239,16 +282,24 @@ def render(filters: Dict[str, Any]) -> None:
     st.markdown("A definitive overview of listing capacities bridging B2C pipelines (Tiki) juxtaposed alongside standard C2C structures (eBay).")
     
     try:
+        # Load raw datasets
         df_fact_tiki, df_fact_ebay, df_product, df_category = load_data()
     except Exception as e:
-        st.error(f"Error loading datasets: {e}. Please navigate the exact routing in `../data/processed/`.")
+        st.error(f"Error loading datasets: {e}. Please check routing in `../data/processed/`.")
         return
 
-    # Visual blocks mapping
+    # Clean critical numeric columns to avoid filtering errors
+    df_fact_tiki = _clean_numeric_columns(df_fact_tiki, ["price"])
+    df_fact_ebay = _clean_numeric_columns(df_fact_ebay, ["Total_Cost_VND"])
+
+    # Apply global filters explicitly mapped from Sidebar
+    df_tiki_filtered, df_ebay_filtered = _apply_global_filters(df_fact_tiki, df_fact_ebay, filters)
+
+    # Visual blocks mapping with filtered DataFrames
     with st.container():
-        render_tiki_cold_start(df_fact_tiki, df_product, df_category)
+        render_tiki_cold_start(df_tiki_filtered, df_product, df_category)
         
     st.divider()
 
     with st.container():
-        render_ebay_condition_analysis(df_fact_ebay)
+        render_ebay_condition_analysis(df_ebay_filtered)
