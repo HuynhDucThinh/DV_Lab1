@@ -35,8 +35,8 @@ def main() -> None:
         "📈 Characteristics & Trends"
     ])
 
-    # with tab_pricing:
-    #     tab1_pricing.render(filters)
+    with tab_pricing:
+        tab1_pricing.render(filters)
         
     # with tab_trust:
     #     tab2_trust.render(filters)
