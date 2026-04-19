@@ -1,3 +1,5 @@
+import os
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import streamlit as st
 from sidebar import render_sidebar
 from tabs import tab1_pricing, tab2_trust, tab3_trends
@@ -38,8 +40,8 @@ def main() -> None:
     with tab_pricing:
         tab1_pricing.render(filters)
         
-    # with tab_trust:
-    #     tab2_trust.render(filters)
+    with tab_trust:
+        tab2_trust.render(filters)
 
     with tab_trends:
         tab3_trends.render(filters)
