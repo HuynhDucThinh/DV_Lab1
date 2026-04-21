@@ -188,9 +188,91 @@ def render_tiki_discount_bestseller(df_tiki: pd.DataFrame) -> None:
 	st.plotly_chart(fig, width="stretch")
 
 
+def render_tiki_rating_discount_heatmap(df_tiki: pd.DataFrame) -> None:
+	"""Render heatmap to show how discount and rating relate to sales intensity on Tiki."""
+	_icon_header("fa-solid fa-border-all", "3. Tiki Focus: Rating x Discount Heatmap (Sales Intensity)")
+
+	if df_tiki.empty:
+		st.info("No Tiki data available under current global filters.")
+		return
+
+	required_cols = {"rating_average", "discount_rate", "quantity_sold"}
+	if not required_cols.issubset(df_tiki.columns):
+		st.warning("Missing required columns for heatmap: rating_average, discount_rate, quantity_sold.")
+		return
+
+	df_heat = df_tiki[["rating_average", "discount_rate", "quantity_sold"]].copy()
+	df_heat = clean_numeric(df_heat, ["rating_average", "discount_rate", "quantity_sold"])
+	df_heat = df_heat[(df_heat["rating_average"] >= 0) & (df_heat["rating_average"] <= 5)]
+	df_heat = df_heat[df_heat["discount_rate"] >= 0]
+
+	if df_heat.empty:
+		st.info("Not enough valid Tiki data to build rating-discount heatmap.")
+		return
+
+	min_cell_count = st.slider("Minimum listings per heatmap cell", min_value=3, max_value=100, value=12, step=1)
+
+	rating_bins = [-0.01, 3.0, 4.0, 4.5, 5.01]
+	rating_labels = ["<= 3.0", "3.1-4.0", "4.1-4.5", "4.6-5.0"]
+	discount_bins = [-0.01, 0.0, 10.0, 20.0, 35.0, 50.0, 100.0]
+	discount_labels = ["0%", "1-10%", "11-20%", "21-35%", "36-50%", "> 50%"]
+
+	df_heat["Rating_Bin"] = pd.cut(df_heat["rating_average"], bins=rating_bins, labels=rating_labels)
+	df_heat["Discount_Bin"] = pd.cut(df_heat["discount_rate"], bins=discount_bins, labels=discount_labels)
+
+	summary = (
+		df_heat.groupby(["Rating_Bin", "Discount_Bin"], observed=False, as_index=False)
+		.agg(
+			Median_Quantity_Sold=("quantity_sold", "median"),
+			Listings=("quantity_sold", "count"),
+		)
+	)
+	summary = summary[summary["Listings"] >= min_cell_count].copy()
+
+	if summary.empty:
+		st.info("No heatmap cells meet the minimum listing threshold.")
+		return
+
+	hot_cell = summary.sort_values("Median_Quantity_Sold", ascending=False).iloc[0]
+	left_col, right_col = st.columns(2)
+	left_col.metric("Valid Heatmap Cells", f"{len(summary):,}")
+	right_col.metric(
+		"Top Sales-Intensity Cell",
+		f"{hot_cell['Rating_Bin']} | {hot_cell['Discount_Bin']}"
+	)
+
+	heat_pivot = summary.pivot(index="Rating_Bin", columns="Discount_Bin", values="Median_Quantity_Sold")
+	count_pivot = summary.pivot(index="Rating_Bin", columns="Discount_Bin", values="Listings")
+
+	heat_pivot = heat_pivot.reindex(index=rating_labels, columns=discount_labels)
+	count_pivot = count_pivot.reindex(index=rating_labels, columns=discount_labels)
+	annotation_text = count_pivot.apply(
+		lambda col: col.apply(lambda v: f"n={int(v)}" if pd.notna(v) else "")
+	)
+
+	fig = px.imshow(
+		heat_pivot,
+		labels={"x": "Discount Rate Segment", "y": "Rating Segment", "color": "Median Quantity Sold"},
+		x=discount_labels,
+		y=rating_labels,
+		aspect="auto",
+		color_continuous_scale=["#ecfeff", "#99f6e4", "#2dd4bf", "#0f766e"],
+		title="Tiki Heatmap: Median Quantity Sold by Rating and Discount Segment",
+	)
+	fig.update_traces(
+		text=annotation_text.values,
+		texttemplate="%{text}",
+		hovertemplate=(
+			"Rating segment=%{y}<br>Discount segment=%{x}<br>Median quantity sold=%{z:.1f}<br>%{text}<extra></extra>"
+		),
+	)
+	fig.update_layout(template="plotly_white", margin=dict(t=70, l=20, r=20, b=20))
+	st.plotly_chart(fig, width="stretch")
+
+
 def render_ebay_violin_box(df_ebay: pd.DataFrame) -> None:
 	"""Render combined violin + box traces to show eBay price volatility."""
-	_icon_header("fa-solid fa-wave-square", "3. eBay Focus: Price Volatility (Violin + Box)", color=_ORANGE)
+	_icon_header("fa-solid fa-wave-square", "4. eBay Focus: Price Volatility (Violin + Box)", color=_ORANGE)
 
 	if df_ebay.empty:
 		st.info("No eBay data available under current global filters.")
@@ -240,7 +322,7 @@ def render_ebay_violin_box(df_ebay: pd.DataFrame) -> None:
 
 def render_ebay_price_shipping_boundary(df_ebay: pd.DataFrame) -> None:
 	"""Render stacked bar and scatter to compare listing price and shipping fee boundary."""
-	_icon_header("fa-solid fa-truck", "4. eBay Focus: Listing Price vs Shipping Fee Boundary", color=_BLUE)
+	_icon_header("fa-solid fa-truck", "5. eBay Focus: Listing Price vs Shipping Fee Boundary", color=_BLUE)
 
 	if df_ebay.empty:
 		st.info("No eBay data available under current global filters.")
@@ -336,7 +418,7 @@ def render_ebay_price_shipping_boundary(df_ebay: pd.DataFrame) -> None:
 
 def render_ebay_total_cost_box_by_condition(df_ebay: pd.DataFrame) -> None:
 	"""Render interactive box plot for total cost by product condition."""
-	_icon_header("fa-solid fa-chart-line", "5. eBay Focus: Total Cost Volatility by Condition", color=_BLUE)
+	_icon_header("fa-solid fa-chart-line", "6. eBay Focus: Total Cost Volatility by Condition", color=_BLUE)
 
 	if df_ebay.empty:
 		st.info("No eBay data available under current global filters.")
@@ -437,6 +519,11 @@ def render(filters: Dict[str, Any]) -> None:
 
 	with st.container():
 		render_tiki_discount_bestseller(df_tiki_filtered)
+
+	st.divider()
+
+	with st.container():
+		render_tiki_rating_discount_heatmap(df_tiki_filtered)
 
 	st.divider()
 
