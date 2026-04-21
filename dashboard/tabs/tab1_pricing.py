@@ -5,45 +5,21 @@ import plotly.express as px
 import plotly.graph_objects as go
 from typing import Tuple, Dict, Any
 
+# ── Shared UI helpers ───────────────────────────────────────────────────────────────────
+from components.ui_helpers import icon_header as _icon_header, fa_callout as _fa_callout
+from data.loaders import load_tiki_ebay
+from data.filters import clean_numeric, apply_global_filters
 
-@st.cache_data
-def load_data() -> Tuple[pd.DataFrame, pd.DataFrame]:
-	"""Load and cache processed pricing datasets for Tiki and eBay."""
-	data_dir = "../data/processed"
-	df_fact_tiki = pd.read_csv(f"{data_dir}/fact_tiki_listings.csv", dtype={"product_id": str})
-	df_fact_ebay = pd.read_csv(f"{data_dir}/fact_ebay_listings.csv", dtype={"product_id": str})
-	return df_fact_tiki, df_fact_ebay
-
-
-def _clean_numeric_columns(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
-	"""Convert selected columns to numeric and drop null values in those columns."""
-	cleaned = df.copy()
-	for col in cols:
-		cleaned[col] = pd.to_numeric(cleaned[col], errors="coerce")
-	return cleaned.dropna(subset=cols)
-
-
-def _apply_global_filters(df_tiki: pd.DataFrame, df_ebay: pd.DataFrame, filters: Dict[str, Any]) -> Tuple[pd.DataFrame, pd.DataFrame]:
-	"""Apply global filters from the sidebar to both platform datasets."""
-	selected_platforms = filters.get("platform", ["Tiki", "eBay"])
-	min_price, max_price = filters.get("price_range", (0, 50_000_000))
-
-	if "Tiki" in selected_platforms:
-		tiki_filtered = df_tiki[(df_tiki["price"] >= min_price) & (df_tiki["price"] <= max_price)].copy()
-	else:
-		tiki_filtered = df_tiki.iloc[0:0].copy()
-
-	if "eBay" in selected_platforms:
-		ebay_filtered = df_ebay[(df_ebay["Total_Cost_VND"] >= min_price) & (df_ebay["Total_Cost_VND"] <= max_price)].copy()
-	else:
-		ebay_filtered = df_ebay.iloc[0:0].copy()
-
-	return tiki_filtered, ebay_filtered
-
+# ── Palette (referenced by chart functions below) ───────────────────────────────
+_TEAL   = "#0d9488"
+_ORANGE = "#f97316"
+_BLUE   = "#3b82f6"
+_SLATE  = "#94a3b8"
+_DARK   = "#0f172a"
 
 def render_tiki_price_segments(df_tiki: pd.DataFrame) -> None:
 	"""Render histogram and boxplot to show popular Tiki price segments."""
-	st.subheader("1. Tiki Focus: Price Segment Distribution")
+	_icon_header("fa-solid fa-chart-simple", "1. Tiki Focus: Price Segment Distribution")
 
 	if df_tiki.empty:
 		st.info("No Tiki data available under current global filters.")
@@ -99,7 +75,7 @@ def render_tiki_price_segments(df_tiki: pd.DataFrame) -> None:
 
 def render_tiki_discount_bestseller(df_tiki: pd.DataFrame) -> None:
 	"""Render grouped bar chart by discount segment with best-seller ratio overlay."""
-	st.subheader("2. Tiki Focus: Discount Segment vs Best Seller Ratio")
+	_icon_header("fa-solid fa-percent", "2. Tiki Focus: Discount Segment vs Best Seller Ratio")
 
 	if df_tiki.empty:
 		st.info("No Tiki data available under current global filters.")
@@ -187,7 +163,7 @@ def render_tiki_discount_bestseller(df_tiki: pd.DataFrame) -> None:
 
 def render_ebay_violin_box(df_ebay: pd.DataFrame) -> None:
 	"""Render combined violin + box traces to show eBay price volatility."""
-	st.subheader("3. eBay Focus: Price Volatility (Violin + Box)")
+	_icon_header("fa-solid fa-wave-square", "3. eBay Focus: Price Volatility (Violin + Box)", color=_ORANGE)
 
 	if df_ebay.empty:
 		st.info("No eBay data available under current global filters.")
@@ -237,7 +213,7 @@ def render_ebay_violin_box(df_ebay: pd.DataFrame) -> None:
 
 def render_ebay_price_shipping_boundary(df_ebay: pd.DataFrame) -> None:
 	"""Render stacked bar and scatter to compare listing price and shipping fee boundary."""
-	st.subheader("4. eBay Focus: Listing Price vs Shipping Fee Boundary")
+	_icon_header("fa-solid fa-truck", "4. eBay Focus: Listing Price vs Shipping Fee Boundary", color=_BLUE)
 
 	if df_ebay.empty:
 		st.info("No eBay data available under current global filters.")
@@ -246,7 +222,7 @@ def render_ebay_price_shipping_boundary(df_ebay: pd.DataFrame) -> None:
 	max_points = st.slider("Scatter sample size", min_value=300, max_value=5000, value=1800, step=100)
 
 	df_vis = df_ebay[["price", "shipping_cost", "condition"]].copy()
-	df_vis = _clean_numeric_columns(df_vis, ["price", "shipping_cost"])
+	df_vis = clean_numeric(df_vis, ["price", "shipping_cost"])
 	if df_vis.empty:
 		st.warning("Insufficient eBay price/shipping data for boundary analysis.")
 		return
@@ -332,19 +308,22 @@ def render_ebay_price_shipping_boundary(df_ebay: pd.DataFrame) -> None:
 
 def render(filters: Dict[str, Any]) -> None:
 	"""Main rendering entrypoint for Tab 1: Pricing & Promotions."""
-	st.header("📊 Pricing & Promotions")
-	st.markdown("Price architecture and promotion effects across Tiki and eBay listings.")
+	_icon_header("fa-solid fa-tags", "Pricing &amp; Promotions", level=2)
+	_fa_callout(
+		"fa-solid fa-circle-info", _TEAL,
+		"Price architecture and promotion effects across Tiki and eBay listings."
+	)
 
 	try:
-		df_tiki, df_ebay = load_data()
+		df_tiki, df_ebay = load_tiki_ebay()
 	except Exception as exc:
 		st.error(f"Error loading pricing datasets: {exc}. Check folder ../data/processed.")
 		return
 
-	df_tiki = _clean_numeric_columns(df_tiki, ["price"])
-	df_ebay = _clean_numeric_columns(df_ebay, ["price", "shipping_cost", "Total_Cost_VND"])
+	df_tiki = clean_numeric(df_tiki, ["price"])
+	df_ebay = clean_numeric(df_ebay, ["price", "shipping_cost", "Total_Cost_VND"])
 
-	df_tiki_filtered, df_ebay_filtered = _apply_global_filters(df_tiki, df_ebay, filters)
+	df_tiki_filtered, df_ebay_filtered = apply_global_filters(df_tiki, df_ebay, filters)
 
 	with st.container():
 		render_tiki_price_segments(df_tiki_filtered)

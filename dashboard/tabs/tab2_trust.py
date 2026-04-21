@@ -4,56 +4,17 @@ import numpy as np
 import plotly.graph_objects as go
 from typing import Tuple, Dict, Any, List
 
+# ── Shared UI helpers ───────────────────────────────────────────────────────────────────
+from components.ui_helpers import icon_header as _icon_header, fa_callout as _fa_callout
+from data.loaders import load_5_tables
+from data.filters import clean_numeric, apply_global_filters
 
-# ==========================================
-# DATA LOADING & PREPROCESSING UTILS
-# ==========================================
-@st.cache_data
-def load_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Loads and caches datasets into memory to avoid continuous reloading."""
-    data_dir = "../data/processed"
-    df_fact_tiki = pd.read_csv(f"{data_dir}/fact_tiki_listings.csv", dtype={"product_id": str})
-    df_fact_ebay = pd.read_csv(f"{data_dir}/fact_ebay_listings.csv", dtype={"product_id": str})
-    df_product   = pd.read_csv(f"{data_dir}/dim_product.csv",         dtype={"product_id": str})
-    df_category  = pd.read_csv(f"{data_dir}/dim_category.csv")
-    df_seller    = pd.read_csv(f"{data_dir}/dim_seller.csv")
-    return df_fact_tiki, df_fact_ebay, df_product, df_category, df_seller
-
-
-def _clean_numeric_columns(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
-    """Ensures target columns are numeric and drops rows with invalid values."""
-    cleaned = df.copy()
-    for col in cols:
-        if col in cleaned.columns:
-            cleaned[col] = pd.to_numeric(cleaned[col], errors="coerce")
-    return cleaned.dropna(subset=cols)
-
-
-def _apply_global_filters(
-    df_tiki: pd.DataFrame,
-    df_ebay: pd.DataFrame,
-    filters: Dict[str, Any],
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Applies platform and price range filters globally to the datasets."""
-    selected_platforms = filters.get("platform", ["Tiki", "eBay"])
-    min_price, max_price = filters.get("price_range", (0, 50_000_000))
-
-    if "Tiki" in selected_platforms:
-        tiki_filtered = df_tiki[
-            (df_tiki["price"] >= min_price) & (df_tiki["price"] <= max_price)
-        ].copy()
-    else:
-        tiki_filtered = df_tiki.iloc[0:0].copy()
-
-    if "eBay" in selected_platforms:
-        ebay_filtered = df_ebay[
-            (df_ebay["Total_Cost_VND"] >= min_price) & (df_ebay["Total_Cost_VND"] <= max_price)
-        ].copy()
-    else:
-        ebay_filtered = df_ebay.iloc[0:0].copy()
-
-    return tiki_filtered, ebay_filtered
-
+# ── Palette (referenced by chart functions below) ───────────────────────────────
+_TEAL   = "#0d9488"
+_ORANGE = "#f97316"
+_GREEN  = "#22c55e"
+_SLATE  = "#94a3b8"
+_DARK   = "#0f172a"
 
 # ==========================================
 # 1. TIKI: RATING TIER × SALES (OBJECTIVE 1)
@@ -63,7 +24,7 @@ def render_tiki_rating_sales(
     df_product: pd.DataFrame,
     df_category: pd.DataFrame,
 ) -> None:
-    st.subheader("1. Tiki Ecosystem: Sales Performance by Rating Tier")
+    _icon_header("fa-solid fa-star", "1. Tiki Ecosystem: Sales Performance by Rating Tier")
 
     # Defensive check
     if df_fact_tiki.empty:
@@ -86,7 +47,7 @@ def render_tiki_rating_sales(
     # ── Category Dropdown ────────────────────────────────────────────────────
     all_categories = sorted(df_merged["category"].dropna().unique().tolist())
     selected_cat = st.selectbox(
-        "🗂️ Select a Category to Analyse",
+        "Select a Category to Analyse",
         options=["All Categories"] + all_categories,
         index=0,
         help="Drill into a specific product category to reveal rating-to-sales patterns.",
@@ -196,7 +157,7 @@ def render_ebay_trust_boxplot(
     df_fact_ebay: pd.DataFrame,
     df_seller: pd.DataFrame,
 ) -> None:
-    st.subheader("2. eBay Ecosystem: Price Distribution by Seller Feedback Score Tier")
+    _icon_header("fa-solid fa-medal", "2. eBay Ecosystem: Price Distribution by Seller Feedback Score Tier", color=_ORANGE)
 
     # Defensive check
     if df_fact_ebay.empty:
@@ -322,24 +283,25 @@ def render_ebay_trust_boxplot(
 # ==========================================
 def render(filters: Dict[str, Any]) -> None:
     """Main rendering entrypoint for Tab 2: Trust & Reputation."""
-    st.header("⭐ Trust & Reputation")
-    st.markdown(
+    _icon_header("fa-solid fa-shield-halved", "Trust &amp; Reputation", level=2)
+    _fa_callout(
+        "fa-solid fa-circle-info", _TEAL,
         "How ratings, reviews, and seller credibility drive sales on Tiki (B2C) "
         "and shape pricing dynamics on eBay (C2C/B2C hybrid)."
     )
 
     try:
-        df_fact_tiki, df_fact_ebay, df_product, df_category, df_seller = load_data()
+        df_fact_tiki, df_fact_ebay, df_product, df_category, df_seller = load_5_tables()
     except Exception as e:
         st.error(f"Error loading datasets: {e}. Please check routing in `../data/processed/`.")
         return
 
     # Clean critical numeric columns
-    df_fact_tiki = _clean_numeric_columns(df_fact_tiki, ["price"])
-    df_fact_ebay = _clean_numeric_columns(df_fact_ebay, ["Total_Cost_VND"])
+    df_fact_tiki = clean_numeric(df_fact_tiki, ["price"])
+    df_fact_ebay = clean_numeric(df_fact_ebay, ["Total_Cost_VND"])
 
     # Apply global sidebar filters
-    df_tiki_filtered, df_ebay_filtered = _apply_global_filters(df_fact_tiki, df_fact_ebay, filters)
+    df_tiki_filtered, df_ebay_filtered = apply_global_filters(df_fact_tiki, df_fact_ebay, filters)
 
     with st.container():
         render_tiki_rating_sales(df_tiki_filtered, df_product, df_category)
