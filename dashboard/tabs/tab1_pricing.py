@@ -7,7 +7,7 @@ from typing import Tuple, Dict, Any
 
 # ── Shared UI helpers ───────────────────────────────────────────────────────────────────
 from components.ui_helpers import icon_header as _icon_header, fa_callout as _fa_callout
-from data.loaders import load_tiki_ebay
+from data.loaders import load_5_tables
 from data.filters import clean_numeric, apply_global_filters
 
 # ── Palette (referenced by chart functions below) ───────────────────────────────
@@ -16,6 +16,33 @@ _ORANGE = "#f97316"
 _BLUE   = "#3b82f6"
 _SLATE  = "#94a3b8"
 _DARK   = "#0f172a"
+
+
+def _enrich_ebay_for_tab1(
+	df_ebay: pd.DataFrame,
+	df_product: pd.DataFrame,
+	df_category: pd.DataFrame,
+	df_seller: pd.DataFrame,
+) -> pd.DataFrame:
+	"""Attach seller trust and category labels to eBay listings for tab-1 charts."""
+	out = df_ebay.copy()
+
+	if "seller_username" in out.columns and "seller_username" in df_seller.columns:
+		seller_lookup = df_seller.drop_duplicates(subset=["seller_username"]).set_index("seller_username")
+		for col in ["seller_feedback_percent", "Trust_Level", "seller_feedback_score"]:
+			if col in seller_lookup.columns and col not in out.columns:
+				out[col] = out["seller_username"].map(seller_lookup[col])
+
+	if "product_id" in out.columns and "product_id" in df_product.columns and "category_id" in df_product.columns:
+		product_lookup = df_product.drop_duplicates(subset=["product_id"]).set_index("product_id")
+		if "category_id" not in out.columns:
+			out["category_id"] = out["product_id"].map(product_lookup["category_id"])
+
+	if "category" not in out.columns and {"category_id", "category"}.issubset(df_category.columns):
+		category_lookup = df_category.drop_duplicates(subset=["category_id"]).set_index("category_id")
+		out["category"] = out.get("category_id", pd.Series(index=out.index)).map(category_lookup["category"])
+
+	return out
 
 def render_tiki_price_segments(df_tiki: pd.DataFrame) -> None:
 	"""Render histogram and boxplot to show popular Tiki price segments."""
@@ -306,6 +333,82 @@ def render_ebay_price_shipping_boundary(df_ebay: pd.DataFrame) -> None:
 	)
 
 
+
+def render_ebay_total_cost_box_by_condition(df_ebay: pd.DataFrame) -> None:
+	"""Render interactive box plot for total cost by product condition."""
+	_icon_header("fa-solid fa-chart-line", "5. eBay Focus: Total Cost Volatility by Condition", color=_BLUE)
+
+	if df_ebay.empty:
+		st.info("No eBay data available under current global filters.")
+		return
+
+	required_cols = {"condition", "Total_Cost_VND"}
+	if not required_cols.issubset(df_ebay.columns):
+		st.warning("Missing required columns for box plot: condition and/or Total_Cost_VND.")
+		return
+
+	df_box = df_ebay[["condition", "Total_Cost_VND"]].copy()
+	df_box = clean_numeric(df_box, ["Total_Cost_VND"])
+	df_box["condition"] = df_box["condition"].astype(str)
+	df_box = df_box[df_box["condition"].str.strip() != ""]
+
+	if df_box.empty:
+		st.warning("Insufficient valid data to plot total cost by condition.")
+		return
+
+	condition_options = sorted(df_box["condition"].dropna().unique().tolist())
+	selected_conditions = st.multiselect(
+		"Condition filter (Total Cost Box Plot)",
+		options=condition_options,
+		default=condition_options[:10] if len(condition_options) > 10 else condition_options,
+	)
+
+	if not selected_conditions:
+		st.info("Please select at least one condition.")
+		return
+
+	df_box = df_box[df_box["condition"].isin(selected_conditions)]
+	if df_box.empty:
+		st.info("No records match selected conditions.")
+		return
+
+	y_min = float(df_box["Total_Cost_VND"].min())
+	y_max = float(df_box["Total_Cost_VND"].max())
+	y_range = st.slider(
+		"Y range - Total Cost (VND)",
+		min_value=max(0.0, y_min),
+		max_value=y_max,
+		value=(max(0.0, y_min), y_max),
+	)
+	df_box = df_box[(df_box["Total_Cost_VND"] >= y_range[0]) & (df_box["Total_Cost_VND"] <= y_range[1])]
+
+	if df_box.empty:
+		st.info("No records remain after applying y-axis range.")
+		return
+
+	ordered_conditions = (
+		df_box.groupby("condition", as_index=False)["Total_Cost_VND"]
+		.median()
+		.sort_values("Total_Cost_VND")
+		["condition"]
+		.tolist()
+	)
+
+	fig = px.box(
+		df_box,
+		x="condition",
+		y="Total_Cost_VND",
+		category_orders={"condition": ordered_conditions},
+		points="suspectedoutliers",
+		color="condition",
+		title="Distribution of Total Cost (VND) by Product Condition",
+		labels={"condition": "Condition", "Total_Cost_VND": "Total Cost (VND)"},
+	)
+	fig.update_layout(template="plotly_white", showlegend=False, margin=dict(t=70, l=20, r=20, b=20))
+	fig.update_xaxes(type="category")
+	st.plotly_chart(fig, width="stretch")
+
+
 def render(filters: Dict[str, Any]) -> None:
 	"""Main rendering entrypoint for Tab 1: Pricing & Promotions."""
 	_icon_header("fa-solid fa-tags", "Pricing &amp; Promotions", level=2)
@@ -315,10 +418,12 @@ def render(filters: Dict[str, Any]) -> None:
 	)
 
 	try:
-		df_tiki, df_ebay = load_tiki_ebay()
+		df_tiki, df_ebay, df_product, df_category, df_seller = load_5_tables()
 	except Exception as exc:
 		st.error(f"Error loading pricing datasets: {exc}. Check folder ../data/processed.")
 		return
+
+	df_ebay = _enrich_ebay_for_tab1(df_ebay, df_product, df_category, df_seller)
 
 	df_tiki = clean_numeric(df_tiki, ["price"])
 	df_ebay = clean_numeric(df_ebay, ["price", "shipping_cost", "Total_Cost_VND"])
@@ -342,3 +447,8 @@ def render(filters: Dict[str, Any]) -> None:
 
 	with st.container():
 		render_ebay_price_shipping_boundary(df_ebay_filtered)
+
+	st.divider()
+
+	with st.container():
+		render_ebay_total_cost_box_by_condition(df_ebay_filtered)
