@@ -121,8 +121,12 @@ def render_tiki_rating_sales(
 
     # ── Grouped Bar Chart (Listing Count + Total Sold, dual-axis) ────────────
     # Gestalt Pop-out: highlight best-performing tier in orange, rest muted gray
-    bar_colors_listing = ["#f97316" if i == max_idx else "#94a3b8" for i in agg.index]
-    bar_colors_sold    = ["#ea580c" if i == max_idx else "#cbd5e1" for i in agg.index]
+    # GESTALT – SIMILARITY: Listing Count luôn XANH DƯƠNG (đậm khi highlight / nhạt khi không),
+    # Total Sold luôn CAM (đậm / nhạt) — 2 hue hoàn toàn khác nhau nên mắt
+    # phân biệt 2 series ngay lập tức mà không cần đọc legend.
+    # GESTALT – pop-out: tier bán tốt nhất (max_idx) dùng màu ĐẬM, còn lại NHẠT.
+    bar_colors_listing = ["#1d4ed8" if i == max_idx else "#bfdbfe" for i in agg.index]  # Blue dark / light
+    bar_colors_sold    = ["#ea580c" if i == max_idx else "#fed7aa" for i in agg.index]  # Orange dark / light
 
     fig = go.Figure()
 
