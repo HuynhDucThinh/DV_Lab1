@@ -1,14 +1,3 @@
-"""
-tab0_overview.py - Overview Tab
-
-Five analytical sections, each answering one research question:
-  1. Dataset Snapshot     - scope and structure of the data (EDA)
-  2. Platform Scale       - listing volume and category distribution
-  3. Price Landscape      - price distribution and cross-platform comparison
-  4. Product Profile      - item condition (eBay) and category mix (Tiki)
-  5. Market Health        - stagnation risk, discount pressure, condition saturation
-"""
-
 import streamlit as st
 import pandas as pd
 import numpy as np

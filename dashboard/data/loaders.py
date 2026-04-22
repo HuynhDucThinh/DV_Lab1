@@ -1,14 +1,3 @@
-"""
-data/loaders.py — Cached data loading functions shared across all tabs.
-
-Each function is decorated with @st.cache_data so the CSV files are read only
-once per Streamlit session.  Centralizing loaders here eliminates the four
-duplicate load_data() definitions that previously lived in each tab file.
-
-DATA_DIR is resolved relative to dashboard/ because app.py sets os.chdir()
-to the directory of app.py before any imports execute.
-"""
-
 import streamlit as st
 import pandas as pd
 from config import DATA_DIR

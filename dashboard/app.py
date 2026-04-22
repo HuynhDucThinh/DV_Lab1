@@ -1,20 +1,3 @@
-"""
-app.py — Dashboard entry point / pure orchestrator.
-
-Responsibility: wire the modules together in the correct order.
-All UI logic lives in components/ and styles/.
-
-Render sequence:
-  1. Global CSS + Font Awesome
-  2. Colorblind body class (JS, no reload)
-  3. Session state: consume query-param actions (cb= / sb=)
-  4. Sidebar (rendered only when visible; provides filters)
-  5. Hero banner
-  6. Show Panel trigger (only when sidebar hidden)
-  7. Tab content
-  8. Footer
-"""
-
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -27,8 +10,6 @@ from components.sidebar    import render_sidebar
 from components.navigation import consume_header_actions, _get_active_tab, render_tab_content
 from components.footer     import render_footer
 
-
-# ── Default filters used when sidebar is hidden ───────────────────────────────
 _DEFAULT_FILTERS: dict = {
     "platform":    ["Tiki", "eBay"],
     "price_range": (0, 10_000_000),

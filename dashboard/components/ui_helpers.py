@@ -1,12 +1,3 @@
-"""
-components/ui_helpers.py — Shared UI building blocks used across all tabs.
-
-These helpers encapsulate the Font Awesome + inline-HTML pattern so each tab
-never has to re-define them.  Import with:
-
-    from components.ui_helpers import icon_header, fa_callout, stat_card
-"""
-
 import streamlit as st
 
 # ── Colour defaults (used when no color argument is passed) ───────────────────

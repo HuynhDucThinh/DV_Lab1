@@ -1,13 +1,3 @@
-"""
-components/kpi_cards.py — Platform KPI summary cards rendered at the top of the dashboard.
-
-Encapsulates the 4-column metric card row (Total Listings, eBay Sellers,
-Median Price, Tiki Promotions) and the KPI_HEADER label.
-
-Public API:
-    render_kpi_cards()   → render the full KPI row (label + 4 metric cards)
-"""
-
 import streamlit as st
 import streamlit_shadcn_ui as ui
 

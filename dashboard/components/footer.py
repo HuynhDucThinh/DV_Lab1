@@ -1,10 +1,3 @@
-"""
-components/footer.py — Compact feature-summary footer.
-
-Colour scheme: light — matches the dashboard's teal-on-white palette.
-Language: English.
-"""
-
 import streamlit as st
 
 

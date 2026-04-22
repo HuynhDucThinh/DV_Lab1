@@ -1,10 +1,3 @@
-"""
-data/filters.py — Shared DataFrame filtering utilities.
-
-Previously each tab (tab1, tab2, tab3) had its own copy of these two functions.
-This module provides one canonical implementation imported by all tabs.
-"""
-
 import pandas as pd
 from typing import Dict, Any, List, Tuple
 
@@ -59,3 +52,26 @@ def apply_global_filters(
         ebay_out = df_ebay.iloc[0:0].copy()
 
     return tiki_out, ebay_out
+
+
+def simplify_ebay_condition(cond: str) -> str | None:
+    """
+    Map a raw eBay condition string to one of three canonical groups.
+
+    Returns None for 'For Parts' / unknown conditions (caller should exclude).
+    Groups:
+        'eBay — New'               : new / brand-new / new-with-tags
+        'eBay — Used'              : used / usato
+        'eBay — Refurb / Open Box' : refurbished, open box, certified, graded
+    """
+    c = str(cond).lower().strip()
+    if c == "new" or any(k in c for k in ["brand new", "new with tags", "new other", "nuovo", "neu"]):
+        return "eBay — New"
+    if any(k in c for k in ["used", "usato"]):
+        return "eBay — Used"
+    if any(k in c for k in [
+        "refurbished", "open box", "opened", "certified",
+        "good -", "excellent -", "very good -",
+    ]):
+        return "eBay — Refurb / Open Box"
+    return None

@@ -1,10 +1,3 @@
-"""
-components/sidebar.py — Sidebar with navigation + filters.
-
-Navigation tabs are embedded at the TOP of the sidebar using query-param routing
-(?tab=<key>) so they work with the rest of the app without needing a fixed overlay.
-"""
-
 import streamlit as st
 from typing import Dict, Any
 

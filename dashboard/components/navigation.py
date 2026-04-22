@@ -1,13 +1,3 @@
-"""
-components/navigation.py — Hover-expand vertical navigation rail.
-
-Design mirrors Vietnam-Air-Quality-Dashboard/components/navigation.py:
-  • Fixed left-side icon rail, expands on hover to show labels
-  • Query-param ?tab=<key> based routing (no page reload flicker)
-  • Icons are inline SVG (shadcn/lucide style, no emoji)
-  • Active tab highlighted with gradient pill
-"""
-
 import streamlit as st
 
 # Tab definitions: (key, svg_icon_html, label)

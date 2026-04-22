@@ -1,14 +1,3 @@
-"""
-tab2_trust.py — Trust & Reputation Tab
-
-Two analytical sections mapping to Objectives 7 & 8 (phan_tich.md):
-  1. Tiki  — Objective 7: Impact of product rating tiers on average sales volume
-  2. eBay  — Objective 8: Seller feedback score tiers vs listing price distribution
-
-Each section: KPI cards → Chart A (Bar) → Chart B (Grouped Bar / Boxplot)
-→ Expander with Chart Analysis + Recommended Actions + Cross-tab navigation.
-"""
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -18,41 +7,30 @@ from typing import Dict, Any
 from components.ui_helpers import icon_header as _icon_header, fa_callout as _fa_callout
 from data.loaders import load_5_tables
 from data.filters import clean_numeric, apply_global_filters
+from config import (
+    TEAL   as _TEAL,
+    ORANGE as _ORANGE,
+    BLUE   as _BLUE,
+    SLATE  as _SLATE,
+    DARK   as _DARK,
+    AMBER  as _AMBER,
+    GREEN  as _GREEN,
+    INDIGO as _INDIGO,
+    RED    as _RED,
+    RATING_BINS   as _RATING_BINS,
+    RATING_LABELS as _RATING_LABELS,
+    RATING_COLORS as _RATING_COLORS,
+    EBAY_TIERS    as _EBAY_TIERS,
+    EBAY_COLORS   as _EBAY_COLORS,
+)
 
-# Color palette
-_TEAL   = "#0d9488"
-_ORANGE = "#f97316"
-_BLUE   = "#3b82f6"
-_SLATE  = "#94a3b8"
-_DARK   = "#0f172a"
-_AMBER  = "#f59e0b"
-_GREEN  = "#22c55e"
-_INDIGO = "#6366f1"
-
-# Rating tier config — shared across Obj 7 charts
-_RATING_BINS   = [-0.001, 0, 3.0, 4.0, 5.0]
-_RATING_LABELS = ["No Rating (0)", "Low (1–3)", "Average (3–4)", "High (4–5)"]
-_RATING_COLORS = {
-    "No Rating (0)": _SLATE,
-    "Low (1–3)":     "#ef4444",
-    "Average (3–4)": _AMBER,
-    "High (4–5)":    _TEAL,
-}
-
-# eBay seller tier config — shared across Obj 8 charts
-_EBAY_TIERS  = ["Newcomer (1–500)", "Established (501–5K)", "Reputable (5K–50K)", "Elite (50K+)"]
-_EBAY_COLORS = {
-    "Newcomer (1–500)":     _SLATE,
-    "Established (501–5K)": _GREEN,
-    "Reputable (5K–50K)":   _AMBER,
-    "Elite (50K+)":         _INDIGO,
-}
 
 def _hex_to_rgba(hex_color: str, alpha: float = 0.15) -> str:
     """Convert #rrggbb to rgba(r,g,b,alpha)."""
     h = hex_color.lstrip("#")
     r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
     return f"rgba({r},{g},{b},{alpha})"
+
 
 
 # Section 1 — Tiki: Rating Tier × Average Sales (Objective 7)
