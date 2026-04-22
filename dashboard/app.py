@@ -1,28 +1,38 @@
 """
-app.py — Dashboard entry point.
+app.py — Dashboard entry point / pure orchestrator.
 
-Responsibilities (only):
-  1. Set Streamlit page config
-  2. Inject global assets (FA, CSS)
-  3. Render sidebar → receive filter dict
-  4. Render hero banner + KPI cards
-  5. Delegate to tab modules
+Responsibility: wire the modules together in the correct order.
+All UI logic lives in components/ and styles/.
 
-All CSS/HTML strings live in  styles/
-UI helpers live in             components/ui_helpers.py
-Data loaders live in           data/loaders.py
+Render sequence:
+  1. Global CSS + Font Awesome
+  2. Colorblind body class (JS, no reload)
+  3. Session state: consume query-param actions (cb= / sb=)
+  4. Sidebar (rendered only when visible; provides filters)
+  5. Hero banner
+  6. Show Panel trigger (only when sidebar hidden)
+  7. Tab content
+  8. Footer
 """
 
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 import streamlit as st
-import streamlit_shadcn_ui as ui
 
-from styles       import GLOBAL_CSS, FA_HTML, HERO_HTML, KPI_HEADER, TAB_HEADER, SHIMMER
-from components.sidebar import render_sidebar
-from data.loaders       import load_kpi_data
-from tabs import tab0_overview, tab1_pricing, tab2_trust, tab3_trends
+from styles import GLOBAL_CSS, FA_HTML, SHIMMER
+
+from components.header     import inject_colorblind_class, render_hero, render_show_panel
+from components.sidebar    import render_sidebar
+from components.navigation import consume_header_actions, _get_active_tab, render_tab_content
+from components.footer     import render_footer
+
+
+# ── Default filters used when sidebar is hidden ───────────────────────────────
+_DEFAULT_FILTERS: dict = {
+    "platform":    ["Tiki", "eBay"],
+    "price_range": (0, 10_000_000),
+}
 
 st.set_page_config(
     page_title="E-commerce Analytics Dashboard",
@@ -33,81 +43,35 @@ st.set_page_config(
 
 
 def main() -> None:
-    # Global CSS (includes FA + Inter @import)
+    # 1. Global CSS + icons
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
+    st.html(FA_HTML)
 
-    # 2. Sidebar filters
-    filters = render_sidebar()
+    # 2. Colorblind body class
+    inject_colorblind_class()
 
-    # 3. Hero banner
-    st.markdown(HERO_HTML, unsafe_allow_html=True)
+    # 3. Query-param actions (cb=toggle, sb=toggle)
+    consume_header_actions()
 
-    # 4. KPI metric cards
-    st.markdown(KPI_HEADER, unsafe_allow_html=True)
-    kpi = load_kpi_data()
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        ui.metric_card(
-            title="Total Listings",
-            content=f"{kpi['total']:,}",
-            description="Tiki + eBay combined",
-            key="kpi_total",
-        )
-    with c2:
-        ui.metric_card(
-            title="eBay Unique Sellers",
-            content=f"{kpi['sellers']:,}",
-            description="Active vendors on platform",
-            key="kpi_sellers",
-        )
-    with c3:
-        ui.metric_card(
-            title="Median Price",
-            content=f"{kpi['median_price'] / 1e6:.1f}M VND",
-            description="Cross-platform median",
-            key="kpi_price",
-        )
-    with c4:
-        ui.metric_card(
-            title="Tiki Promotions",
-            content=f"{kpi['disc_pct']:.1f}%",
-            description="Listings with active discount",
-            key="kpi_disc",
-        )
+    # 4. Sidebar state + filters
+    sidebar_hidden = bool(st.session_state.get("sidebar_hidden", False))
+    filters = render_sidebar() if not sidebar_hidden else _DEFAULT_FILTERS
 
-    # Animated shimmer divider
-    st.markdown(SHIMMER, unsafe_allow_html=True)
+    # 5. Active tab
+    active_tab = _get_active_tab()
 
-    # 5. Navigation tabs
-    st.markdown(TAB_HEADER, unsafe_allow_html=True)
-    selected = ui.tabs(
-        options=[
-            "Overview",
-            "Pricing & Promotions",
-            "Trust & Reputation",
-            "Characteristics & Trends",
-        ],
-        default_value="Overview",
-        key="nav_tabs",
-    )
+    # 6. Hero banner
+    render_hero()
 
-    # Thin teal accent line below tabs
-    st.markdown(
-        '<div style="height:3px;border-radius:2px;'
-        'background:linear-gradient(90deg,#0d9488,#14b8a6,rgba(13,148,136,0));'
-        'margin-bottom:1rem;"></div>',
-        unsafe_allow_html=True,
-    )
+    # 7. Show Panel trigger (invisible; hover top-left to reveal)
+    if sidebar_hidden:
+        render_show_panel()
 
-    # 6. Render selected tab
-    if selected == "Overview":
-        tab0_overview.render(filters)
-    elif selected == "Pricing & Promotions":
-        tab1_pricing.render(filters)
-    elif selected == "Trust & Reputation":
-        tab2_trust.render(filters)
-    else:
-        tab3_trends.render(filters)
+    # 7. Tab content
+    render_tab_content(active_tab, filters)
+
+    # 8. Footer
+    render_footer()
 
 
 if __name__ == "__main__":

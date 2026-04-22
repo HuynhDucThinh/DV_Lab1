@@ -1,10 +1,16 @@
+"""
+components/sidebar.py — Sidebar with navigation + filters.
+
+Navigation tabs are embedded at the TOP of the sidebar using query-param routing
+(?tab=<key>) so they work with the rest of the app without needing a fixed overlay.
+"""
+
 import streamlit as st
 from typing import Dict, Any
 
+from components.navigation import _get_active_tab
 
 # ── Sidebar widget dark-theme overrides ───────────────────────────────────────
-# Rules are scoped strictly — NO wildcard selectors, NO .stMarkdown div override
-# (that was killing Font Awesome icon colours via CSS inheritance).
 _SIDEBAR_CSS = """
 <style>
 /* Label text (Platform / Price Range) */
@@ -68,7 +74,7 @@ section[data-testid="stSidebar"] [role="slider"] {
   border: 2px solid #fff !important;
   box-shadow: 0 0 0 3px rgba(13,148,136,.4) !important;
 }
-/* Slider tick labels (the min/max numbers) */
+/* Slider tick labels */
 section[data-testid="stSidebar"] [data-testid="stTickBarMin"],
 section[data-testid="stSidebar"] [data-testid="stTickBarMax"] {
   color: rgba(255,255,255,.32) !important;
@@ -88,68 +94,125 @@ section[data-testid="stSidebar"] [data-testid="stTooltipIcon"] svg {
 </style>
 """
 
+# Tab navigation items: (key, fa_icon_class, label)
+_NAV_ITEMS = [
+    ("overview", "fa-solid fa-gauge-high",      "Overview"),
+    ("pricing",  "fa-solid fa-tags",             "Pricing & Promotions"),
+    ("trust",    "fa-solid fa-shield-halved",    "Trust & Reputation"),
+    ("trends",   "fa-solid fa-chart-line",       "Characteristics & Trends"),
+]
+
 
 def render_sidebar() -> Dict[str, Any]:
-    """Render the premium dark-themed sidebar."""
+    """Render the premium dark-themed sidebar with navigation + filters."""
 
     # Inject widget-only CSS overrides
     st.sidebar.markdown(_SIDEBAR_CSS, unsafe_allow_html=True)
 
-    # ── Brand block ──────────────────────────────────────────────────────────
+    # ── Brand header: logo+name (left) | ✕ Close (right) ────────────────────
+    # Both in the same column row so ✕ appears level with "E-commerce Analytics"
+    c_brand, c_close = st.sidebar.columns([5, 1])
+
+    with c_brand:
+        st.markdown(
+            '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.55rem 0.3rem 0.4rem;">'
+            '<div style="width:44px;height:44px;flex-shrink:0;'
+            'background:linear-gradient(135deg,#0d9488,#0f766e);border-radius:12px;'
+            'display:flex;align-items:center;justify-content:center;'
+            'box-shadow:0 4px 16px rgba(13,148,136,.55),0 0 0 1px rgba(255,255,255,.1);">'
+            '<i class="fa-solid fa-store" style="color:#fff;font-size:1.1rem;"></i>'
+            '</div>'
+            '<div>'
+            '<div style="font-size:1rem;font-weight:800;color:#fff;'
+            'line-height:1.15;letter-spacing:-0.02em;">E-commerce Analytics</div>'
+            '<div style="font-size:0.66rem;color:rgba(255,255,255,.38);'
+            'letter-spacing:0.05em;margin-top:0.1rem;">Multi-Platform Intelligence</div>'
+            '</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+    with c_close:
+        # CSS to vertically center ✕ with the brand block height (~66px)
+        st.markdown(
+            '<style>'
+            'section[data-testid="stSidebar"]'
+            ' [data-testid="stHorizontalBlock"]'
+            ' > [data-testid="stColumn"]:last-child {'
+            '  display:flex !important;'
+            '  align-items:center !important;'
+            '  justify-content:flex-end !important;'
+            '  padding-top:0.55rem !important;'
+            '}'
+            '</style>',
+            unsafe_allow_html=True,
+        )
+        if st.button("✕", key="close_sidebar_btn", help="Close Panel"):
+            st.session_state["sidebar_hidden"] = True
+            st.rerun()
+
+    # Platform badges — rendered below the brand row
     st.sidebar.markdown(
-        """
-        <div style="padding:1rem 0.6rem 0.9rem;">
+        '<div style="display:flex;gap:0.45rem;padding:0 0.6rem 0.8rem;">'
+        '<div style="display:flex;align-items:center;gap:0.35rem;'
+        'background:rgba(13,148,136,.18);border:1px solid rgba(13,148,136,.35);'
+        'border-radius:20px;padding:0.24rem 0.72rem;'
+        'font-size:0.68rem;font-weight:700;color:#5eead4;">'
+        '<span style="width:5px;height:5px;border-radius:50%;'
+        'background:#5eead4;flex-shrink:0;"></span>Tiki'
+        '</div>'
+        '<div style="display:flex;align-items:center;gap:0.35rem;'
+        'background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);'
+        'border-radius:20px;padding:0.24rem 0.72rem;'
+        'font-size:0.68rem;font-weight:700;color:#fb923c;">'
+        '<span style="width:5px;height:5px;border-radius:50%;'
+        'background:#fb923c;flex-shrink:0;"></span>eBay'
+        '</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
-          <!-- Logo + title row -->
-          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.9rem;">
-            <div style="
-              width:44px;height:44px;flex-shrink:0;
-              background:linear-gradient(135deg,#0d9488,#0f766e);
-              border-radius:12px;
-              display:flex;align-items:center;justify-content:center;
-              box-shadow:0 4px 16px rgba(13,148,136,.55),0 0 0 1px rgba(255,255,255,.1);
-            ">
-              <i class="fa-solid fa-store" style="color:#fff;font-size:1.1rem;"></i>
-            </div>
-            <div>
-              <div style="font-size:1rem;font-weight:800;color:#fff;
-                          line-height:1.15;letter-spacing:-0.02em;">
-                E-commerce Analytics
-              </div>
-              <div style="font-size:0.66rem;color:rgba(255,255,255,.38);
-                          letter-spacing:0.05em;margin-top:0.1rem;">
-                Multi-Platform Intelligence
-              </div>
-            </div>
-          </div>
+    # Thin gradient divider
+    st.sidebar.markdown(
+        '<div style="height:1px;background:linear-gradient(90deg,'
+        'transparent,rgba(255,255,255,.09),transparent);'
+        'margin:0 0 0.75rem;"></div>',
+        unsafe_allow_html=True,
+    )
 
-          <!-- Platform badges -->
-          <div style="display:flex;gap:0.45rem;">
-            <div style="
-              display:flex;align-items:center;gap:0.35rem;
-              background:rgba(13,148,136,.18);
-              border:1px solid rgba(13,148,136,.35);
-              border-radius:20px;padding:0.24rem 0.72rem;
-              font-size:0.68rem;font-weight:700;color:#5eead4;
-            ">
-              <span style="width:5px;height:5px;border-radius:50%;
-                           background:#5eead4;flex-shrink:0;"></span>
-              Tiki
-            </div>
-            <div style="
-              display:flex;align-items:center;gap:0.35rem;
-              background:rgba(249,115,22,.15);
-              border:1px solid rgba(249,115,22,.3);
-              border-radius:20px;padding:0.24rem 0.72rem;
-              font-size:0.68rem;font-weight:700;color:#fb923c;
-            ">
-              <span style="width:5px;height:5px;border-radius:50%;
-                           background:#fb923c;flex-shrink:0;"></span>
-              eBay
-            </div>
-          </div>
-        </div>
-        """,
+    # ── Section label: NAVIGATION ─────────────────────────────────────────────
+    st.sidebar.markdown(
+        '<div style="font-size:0.62rem;font-weight:700;letter-spacing:0.12em;'
+        'text-transform:uppercase;color:rgba(255,255,255,.28);'
+        'display:flex;align-items:center;gap:0.45rem;margin-bottom:0.5rem;'
+        'padding:0 0.6rem;">'
+        '<i class="fa-solid fa-compass" style="color:rgba(255,255,255,.28);'
+        'font-size:0.65rem;"></i>Navigation</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Navigation links
+    active_tab = _get_active_tab()
+    nav_rows = ""
+    for key, icon, label in _NAV_ITEMS:
+        is_active = active_tab == key
+        bg      = "linear-gradient(135deg,#0d9488,#0a7c6e)" if is_active else "rgba(255,255,255,.04)"
+        border  = "rgba(13,148,136,.5)" if is_active else "rgba(255,255,255,.07)"
+        color   = "#ffffff" if is_active else "rgba(255,255,255,.6)"
+        shadow  = "0 4px 14px rgba(13,148,136,.35)" if is_active else "none"
+        nav_rows += (
+            f"<a href='?tab={key}' target='_self' style='"
+            f"display:flex;align-items:center;gap:0.6rem;"
+            f"background:{bg};border:1px solid {border};border-radius:9px;"
+            f"padding:0.52rem 0.75rem;margin-bottom:0.3rem;"
+            f"text-decoration:none;color:{color};font-size:0.82rem;font-weight:700;"
+            f"box-shadow:{shadow};transition:all .18s;'>"
+            f"<i class='{icon}' style='font-size:0.85rem;width:16px;text-align:center;'></i>"
+            f"{label}</a>"
+        )
+
+    st.sidebar.markdown(
+        f'<div style="padding:0 0.6rem 0.2rem;">{nav_rows}</div>',
         unsafe_allow_html=True,
     )
 
@@ -157,7 +220,7 @@ def render_sidebar() -> Dict[str, Any]:
     st.sidebar.markdown(
         '<div style="height:1px;background:linear-gradient(90deg,'
         'transparent,rgba(255,255,255,.09),transparent);'
-        'margin:0 0 1rem;"></div>',
+        'margin:0.75rem 0 1rem;"></div>',
         unsafe_allow_html=True,
     )
 
