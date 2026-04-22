@@ -25,7 +25,11 @@ from data.filters  import (
     apply_global_filters,
     simplify_ebay_condition as _simplify_ebay_condition,
 )
-from config import REFERENCE_DATE as _REFERENCE_DATE, TECH_KEYWORDS as _TECH_KEYWORDS
+from config import (
+    REFERENCE_DATE as _REFERENCE_DATE,
+    TECH_KEYWORDS  as _TECH_KEYWORDS,
+    get_chart_palette as _get_palette,
+)
 
 
 # Section 1 -- Tiki Product Stagnation Risk (Obj 5)
@@ -35,10 +39,12 @@ def render_tiki_cold_start(
     df_category:  pd.DataFrame,
 ) -> None:
     """Pareto chart: Tiki categories ranked by zero-interaction product count."""
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]; _RED = _pal["red"]
     _icon_header(
         "fa-solid fa-triangle-exclamation",
         "1. Tiki Ecosystem — Product Stagnation Risk",
-        color="#ef4444",
+        color=_RED,
     )
 
     if df_fact_tiki.empty:
@@ -63,7 +69,7 @@ def render_tiki_cold_start(
         100 * cat_counts["Count"].cumsum() / cat_counts["Count"].sum()
     )
     plot_df = cat_counts.head(20).copy()
-    colors  = ["#ef4444"] * 3 + ["#e2e8f0"] * (len(plot_df) - 3)
+    colors  = [_RED] * 3 + ["#e2e8f0"] * (len(plot_df) - 3)
     lc      = "#334155"
 
     c1, c2, c3 = st.columns(3)
@@ -211,7 +217,7 @@ def render_tiki_cold_start(
             paper_bgcolor="rgba(0,0,0,0)",
         )
         with st.container(border=True):
-            st.plotly_chart(fig_bubble, use_container_width=True)
+            st.plotly_chart(fig_bubble, width='stretch')
 
         with st.expander("Chart 1B Insights & Actionable Recommendations"):
             top_crit = high_risk.nlargest(1, "cold_count") if not high_risk.empty else pd.DataFrame()
@@ -273,10 +279,12 @@ more than half their inventory completely inactive.
 
 def render_ebay_condition_analysis(df_fact_ebay: pd.DataFrame) -> None:
     """Treemap + horizontal bar: eBay condition market share and average cost."""
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]; _BLUE = _pal["blue"]
     _icon_header(
         "fa-solid fa-layer-group",
         "2. eBay Ecosystem — Item Condition Distribution & Cost Impact",
-        color="#0369a1",
+        color=_BLUE,
     )
 
     if df_fact_ebay.empty:
@@ -443,7 +451,7 @@ def render_ebay_condition_analysis(df_fact_ebay: pd.DataFrame) -> None:
         paper_bgcolor="rgba(0,0,0,0)",
     )
     with st.container(border=True):
-        st.plotly_chart(fig_ecdf, use_container_width=True)
+        st.plotly_chart(fig_ecdf, width='stretch')
 
     with st.expander("Chart 2C Insights & Actionable Recommendations"):
         if ecdf_stats:
@@ -536,10 +544,12 @@ def render_price_kde_comparison(
     Overlapping KDE: normalized price density (VND) of Tiki tech products
     vs eBay condition groups, to measure median divergence and segment advantage.
     """
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]
     _icon_header(
         "fa-solid fa-chart-area",
         "3. Cross-Platform Price Architecture — Overlapping KDE",
-        color="#0d9488",
+        color=_TEAL,
     )
 
     # Filter Tiki → tech/electronics
@@ -579,8 +589,8 @@ def render_price_kde_comparison(
     use_log = scale.startswith("Log")
 
     GROUP_CFG: Dict[str, Dict] = {
-        tiki_label:                 {"color": "#0d9488", "dash": "solid"},
-        "eBay — New":               {"color": "#f97316", "dash": "solid"},
+        tiki_label:                 {"color": _TEAL,    "dash": "solid"},
+        "eBay — New":               {"color": _ORANGE,  "dash": "solid"},
         "eBay — Used":              {"color": "#94a3b8", "dash": "dash"},
         "eBay — Refurb / Open Box": {"color": "#8b5cf6", "dash": "dot"},
     }
@@ -731,10 +741,12 @@ def render_ebay_lollipop_lifespan(
     Lollipop chart: average listing age per eBay top-N categories,
     identifying the fastest- and slowest-turnover market segments.
     """
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]; _INDIGO = _pal["indigo"]
     _icon_header(
         "fa-solid fa-hourglass-half",
         "4. eBay Listing Lifespan by Category — Lollipop Chart",
-        color="#7c3aed",
+        color=_INDIGO,
     )
    
     if df_fact_ebay.empty:

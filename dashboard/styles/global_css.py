@@ -620,5 +620,83 @@ iframe[title="streamlit_shadcn_ui.metric_card"] {
   border-radius: var(--radius-md) !important;
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   MULTISELECT — Brand teal chips across all tabs
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Container input border */
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div {
+  border: 1.5px solid var(--clr-slate-200) !important;
+  border-radius: var(--radius-md) !important;
+  background: rgba(255,255,255,.9) !important;
+  transition: border-color var(--transition), box-shadow var(--transition) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div:focus-within {
+  border-color: var(--clr-teal) !important;
+  box-shadow: 0 0 0 3px rgba(13,148,136,.12) !important;
+}
+
+/* Each selected chip */
+[data-testid="stMultiSelect"] [data-baseweb="tag"] {
+  background: rgba(13,148,136,.10) !important;
+  border: 1px solid rgba(13,148,136,.28) !important;
+  border-radius: 20px !important;
+  color: var(--clr-teal-dk) !important;
+  font-size: 0.73rem !important;
+  font-weight: 600 !important;
+  padding: 2px 10px 2px 10px !important;
+  margin: 2px 3px !important;
+  gap: 4px !important;
+  transition: background var(--transition) !important;
+}
+[data-testid="stMultiSelect"] [data-baseweb="tag"]:hover {
+  background: rgba(13,148,136,.18) !important;
+}
+
+/* ✕ close icon inside chip */
+[data-testid="stMultiSelect"] [data-baseweb="tag"] [role="presentation"] {
+  color: var(--clr-teal) !important;
+  opacity: 0.7 !important;
+  font-size: 0.75rem !important;
+}
+[data-testid="stMultiSelect"] [data-baseweb="tag"] [role="presentation"]:hover {
+  opacity: 1 !important;
+  color: var(--clr-teal-dk) !important;
+}
+
+/* Label above multiselect */
+[data-testid="stMultiSelect"] label {
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  color: var(--clr-slate-600) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 4px !important;
+}
+
+/* Dropdown option list */
+[data-baseweb="popover"] [role="option"] {
+  font-size: 0.82rem !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 6px 12px !important;
+}
+[data-baseweb="popover"] [role="option"]:hover,
+[data-baseweb="popover"] [aria-selected="true"] {
+  background: rgba(13,148,136,.08) !important;
+  color: var(--clr-teal-dk) !important;
+}
+
+/* Clear-all (⊗) button */
+[data-testid="stMultiSelect"] button[aria-label="Clear all"] {
+  color: var(--clr-slate-400) !important;
+  opacity: 0.7 !important;
+}
+[data-testid="stMultiSelect"] button[aria-label="Clear all"]:hover {
+  color: var(--clr-red) !important;
+  opacity: 1 !important;
+}
+
 </style>
 """

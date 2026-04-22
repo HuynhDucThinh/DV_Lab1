@@ -33,10 +33,8 @@ def inject_colorblind_class() -> None:
 def render_hero() -> None:
     """
     Render the teal gradient hero banner.
-    Reads colorblind_mode from session state internally.
     """
-    colorblind_on = bool(st.session_state.get("colorblind_mode", False))
-    st.markdown(make_hero_html(colorblind_on=colorblind_on), unsafe_allow_html=True)
+    st.markdown(make_hero_html(), unsafe_allow_html=True)
 
 
 # ── 3. Show Panel trigger (only when sidebar is hidden) ───────────────────────
@@ -72,42 +70,11 @@ def render_show_panel() -> None:
 
 def render_header() -> None:
     """
-    Legacy: render the sticky HTML top header bar with colorblind toggle.
+    Legacy: render the sticky HTML top header bar.
     Kept for backward compatibility — prefer render_hero() for new code.
     """
     colorblind_on = bool(st.session_state.get("colorblind_mode", False))
     header_class = "ec-hdr ec-hdr-cb" if colorblind_on else "ec-hdr"
-    toggle_href = "?cb=toggle"
-
-    if colorblind_on:
-        colorblind_badge = (
-            f"<a class='ec-hdr-mode-link' href='{toggle_href}' target='_self' "
-            f"title='Bấm để tắt chế độ mù màu'>"
-            f"<div class='ec-hdr-mode ec-hdr-mode-on'>"
-            f"<svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' "
-            f"fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' "
-            f"stroke-linejoin='round' style='flex-shrink:0'>"
-            f"<circle cx='12' cy='12' r='3'/>"
-            f"<path d='M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12"
-            f"M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12'/>"
-            f"</svg>"
-            f"Mù màu: Bật</div></a>"
-        )
-    else:
-        colorblind_badge = (
-            f"<a class='ec-hdr-mode-link' href='{toggle_href}' target='_self' "
-            f"title='Bấm để bật chế độ mù màu'>"
-            f"<div class='ec-hdr-mode'>"
-            f"<svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' "
-            f"fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' "
-            f"stroke-linejoin='round' style='flex-shrink:0'>"
-            f"<path d='M9.88 9.88a3 3 0 1 0 4.24 4.24'/>"
-            f"<path d='M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68'/>"
-            f"<path d='M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61'/>"
-            f"<line x1='2' x2='22' y1='2' y2='22'/>"
-            f"</svg>"
-            f"Mù màu: Tắt</div></a>"
-        )
 
     st.markdown(
         f"""
@@ -129,9 +96,6 @@ def render_header() -> None:
         Tiki &nbsp;·&nbsp; eBay &nbsp;&mdash;&nbsp; Multi-platform Market Intelligence &nbsp;·&nbsp; Apr 2026
       </div>
     </div>
-  </div>
-  <div class="ec-hdr-right">
-    {colorblind_badge}
   </div>
 </div>
 """,

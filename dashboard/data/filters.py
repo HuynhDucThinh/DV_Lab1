@@ -75,3 +75,23 @@ def simplify_ebay_condition(cond: str) -> str | None:
     ]):
         return "eBay — Refurb / Open Box"
     return None
+
+
+def simplify_condition_short(cond: str) -> str | None:
+    """
+    Map a raw eBay condition string to a short canonical group label.
+
+    Returns None for 'For Parts' / unknown conditions (caller should exclude).
+    Groups: 'New', 'Used', 'Refurbished'
+    """
+    c = str(cond).lower().strip()
+    if c == "new" or any(k in c for k in ["brand new", "new with tags", "new other"]):
+        return "New"
+    if any(k in c for k in ["used", "usato"]):
+        return "Used"
+    if any(k in c for k in [
+        "refurbished", "open box", "opened", "certified",
+        "good -", "excellent -", "very good -",
+    ]):
+        return "Refurbished"
+    return None
