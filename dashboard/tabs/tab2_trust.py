@@ -22,6 +22,7 @@ from config import (
     RATING_COLORS as _RATING_COLORS,
     EBAY_TIERS    as _EBAY_TIERS,
     EBAY_COLORS   as _EBAY_COLORS,
+    get_chart_palette as _get_palette,
 )
 
 
@@ -39,6 +40,9 @@ def render_tiki_rating_sales(
     df_product: pd.DataFrame,
     df_category: pd.DataFrame,
 ) -> None:
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]; _BLUE = _pal["blue"]
+    _SLATE = _pal["slate"]; _AMBER = _pal["amber"]; _INDIGO = _pal["indigo"]
     _icon_header("fa-solid fa-star", "1. Tiki — Rating Tier & Average Sales Performance")
 
     if df_fact_tiki.empty:
@@ -140,7 +144,7 @@ def render_tiki_rating_sales(
     )
 
     with st.container(border=True):
-        st.plotly_chart(fig_a, use_container_width=True)
+        st.plotly_chart(fig_a, width='stretch')
 
     # Chart B — Grouped Bar: Rating Tier × Top 5 Categories
     st.markdown("##### Chart B — Grouped Bar: Avg Qty Sold per Product by Rating Tier across Categories")
@@ -206,7 +210,7 @@ def render_tiki_rating_sales(
     )
 
     with st.container(border=True):
-        st.plotly_chart(fig_b, use_container_width=True)
+        st.plotly_chart(fig_b, width='stretch')
 
     # Insights expander
     with st.expander("Chart Insights & Actionable Recommendations"):
@@ -269,8 +273,13 @@ def render_ebay_trust_boxplot(
     df_fact_ebay: pd.DataFrame,
     df_seller: pd.DataFrame,
 ) -> None:
-    _icon_header("fa-solid fa-medal", "2. eBay — Seller Trust Tier & Price Distribution",
-                 color=_ORANGE)
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]; _BLUE = _pal["blue"]
+    _SLATE = _pal["slate"]; _AMBER = _pal["amber"]; _INDIGO = _pal["indigo"]
+    _icon_header(
+        "fa-solid fa-shield-halved",
+        "2. eBay — Seller Trust Tier & Price Distribution",
+        color=_ORANGE)
 
     if df_fact_ebay.empty:
         _fa_callout("fa-solid fa-circle-exclamation", _ORANGE,
@@ -380,7 +389,7 @@ def render_ebay_trust_boxplot(
     )
 
     with st.container(border=True):
-        st.plotly_chart(fig_a, use_container_width=True)
+        st.plotly_chart(fig_a, width='stretch')
 
     # Chart B — Stratified Boxplot: Price Dispersion by Seller Tier
     st.markdown("##### Chart B — Stratified Boxplot: Price Dispersion by Seller Tier")
@@ -428,7 +437,7 @@ def render_ebay_trust_boxplot(
     )
 
     with st.container(border=True):
-        st.plotly_chart(fig_b, use_container_width=True)
+        st.plotly_chart(fig_b, width='stretch')
 
     # Insights expander
     with st.expander("Chart Insights & Actionable Recommendations"):

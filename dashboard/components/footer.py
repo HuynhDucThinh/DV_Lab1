@@ -13,59 +13,72 @@ def render_footer() -> None:
     ]
 
     member_chips = "".join(
-        [
-            f'<div class="ec-ftr-chip"><span class="ec-ftr-dot"></span>{m}</div>'
-            for m in members
-        ]
+        f'<div class="ec-ftr-chip"><span class="ec-ftr-dot"></span>{m}</div>'
+        for m in members
     )
 
     html = f"""
 <div class="ec-ftr-wrapper">
 <div class="ec-ftr-container">
-<div class="ec-ftr-features-grid">
+<div class="ec-ftr-features-grid" style="grid-template-columns: repeat(6,1fr);">
 
 <div class="ec-ftr-col">
-<div class="ec-ftr-col-title">Market Overview</div>
+<div class="ec-ftr-col-title">Overview</div>
 <ul class="ec-ftr-list">
-<li><span>Platform Share:</span> Listings distribution between Tiki and eBay</li>
-<li><span>Price Distribution:</span> Side-by-side box plots Tiki vs. eBay (VND)</li>
-<li><span>eBay Condition Mix:</span> New · Used · Refurbished breakdown</li>
-<li><span>Market Signals:</span> Stagnation risk · Active discounts · New-item share</li>
+<li><span>Platform Share:</span> Tiki vs. eBay listing distribution</li>
+<li><span>Price Snapshot:</span> Side-by-side box plots (VND)</li>
+<li><span>Condition Mix:</span> New · Used · Refurbished breakdown</li>
+<li><span>Market Signals:</span> Stagnation risk · Active discounts</li>
 </ul>
 </div>
 
 <div class="ec-ftr-col">
 <div class="ec-ftr-col-title">Pricing &amp; Promotions</div>
 <ul class="ec-ftr-list">
-<li><span>Price Structure:</span> Violin plots, scatter &amp; histograms by category</li>
-<li><span>Discount Segments:</span> Discount rate and depth across Tiki listings</li>
-<li><span>Platform Comparison:</span> Tiki–eBay median price gap by active filters</li>
-<li><span>Best Sellers:</span> Top-performing products and their pricing profiles</li>
+<li><span>Price Structure:</span> Histogram, box &amp; violin by condition</li>
+<li><span>Discount Segments:</span> Best Seller rate per discount tier</li>
+<li><span>Shipping Overhead:</span> Stacked bar — listing vs. total cost</li>
+<li><span>Top-3 Categories:</span> Highest median price &amp; shipping fee</li>
 </ul>
 </div>
 
 <div class="ec-ftr-col">
 <div class="ec-ftr-col-title">Trust &amp; Reputation</div>
 <ul class="ec-ftr-list">
-<li><span>Trust Level:</span> High Trust / Normal / Low Trust seller classification</li>
-<li><span>Feedback Score:</span> eBay seller rating distribution analysis</li>
-<li><span>Top Sellers:</span> Ranking by listings volume and reputation score</li>
-<li><span>Risk Detection:</span> Sellers with low feedback flagged for review</li>
+<li><span>Seller Tiers:</span> Elite · Power · Reputable · Standard</li>
+<li><span>Feedback Score:</span> eBay rating distribution &amp; pricing link</li>
+<li><span>Rating Impact:</span> Tiki rating vs. sales volume</li>
+<li><span>Risk Detection:</span> Low-feedback sellers flagged</li>
 </ul>
 </div>
 
 <div class="ec-ftr-col">
 <div class="ec-ftr-col-title">Characteristics &amp; Trends</div>
 <ul class="ec-ftr-list">
-<li><span>Category Analysis:</span> Top Tiki categories by volume and price</li>
-<li><span>Time Series:</span> Listing timeline by eBay posting date</li>
-<li><span>Correlations:</span> Rating vs. Sales, Price vs. Discount</li>
+<li><span>Pareto Analysis:</span> Cold-start risk in Tiki categories</li>
+<li><span>Condition Trends:</span> eBay listing volume by condition</li>
+<li><span>Platform KDE:</span> Tiki vs. eBay price density overlay</li>
+<li><span>Listing Lifecycle:</span> eBay posting timeline lollipop</li>
 </ul>
-<div class="ec-ftr-col-title" style="margin-top:14px">Accessibility</div>
+</div>
+
+<div class="ec-ftr-col">
+<div class="ec-ftr-col-title">Machine Learning</div>
 <ul class="ec-ftr-list">
-<li><span>Colorblind Mode:</span> Deuteranopia-safe palette via one-click toggle</li>
-<li><span>Global Filters:</span> Filter by platform and price range at any time</li>
-<li><span>Auto Insights:</span> Contextual commentary after every chart section</li>
+<li><span>Best Seller Predictor:</span> Logistic Regression · Random Forest</li>
+<li><span>Price Clustering:</span> K-Means market tier segmentation</li>
+<li><span>Trust Score Model:</span> Gradient Boosting Regressor</li>
+<li><span>Status:</span> In development · Coming soon</li>
+</ul>
+</div>
+
+<div class="ec-ftr-col">
+<div class="ec-ftr-col-title">Summary &amp; Conclusion</div>
+<ul class="ec-ftr-list">
+<li><span>Radar Profile:</span> 6-dimension Tiki vs. eBay overview</li>
+<li><span>Benchmark Bar:</span> Per-metric numeric comparison</li>
+<li><span>Dimension Filter:</span> Select dimensions for both charts</li>
+<li><span>Final Verdict:</span> Platform recommendations by role</li>
 </ul>
 </div>
 

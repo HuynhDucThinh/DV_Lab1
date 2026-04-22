@@ -41,6 +41,26 @@ TAB_ITEMS = [
         </svg>""",
         "Trends",
     ),
+    (
+        "ml",
+        """<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12"/>
+          <path d="M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+        </svg>""",
+        "ML",
+    ),
+    (
+        "summary",
+        """<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3h18v18H3z" rx="2"/>
+          <path d="M8 17l4-8 4 8"/>
+          <path d="M10.5 13h3"/>
+        </svg>""",
+        "Summary",
+    ),
 ]
 
 # Tab key → shadcn tabs label mapping (for backward compat with ui.tabs)
@@ -49,6 +69,8 @@ TAB_KEY_TO_LABEL = {
     "pricing":  "Pricing & Promotions",
     "trust":    "Trust & Reputation",
     "trends":   "Characteristics & Trends",
+    "ml":       "Machine Learning",
+    "summary":  "Summary & Conclusion",
 }
 
 LABEL_TO_TAB_KEY = {v: k for k, v in TAB_KEY_TO_LABEL.items()}
@@ -153,13 +175,15 @@ def render_tab_content(active_tab: str, filters: dict) -> None:
     Dispatch rendering to the correct tab module based on active_tab key.
     Falls back to overview if the key is unknown.
     """
-    from tabs import tab0_overview, tab1_pricing, tab2_trust, tab3_trends  # local import avoids circular
+    from tabs import tab0_overview, tab1_pricing, tab2_trust, tab3_trends, tab4_ml, tab5_summary
 
     tab_map = {
         "overview": lambda: tab0_overview.render(filters),
         "pricing":  lambda: tab1_pricing.render(filters),
         "trust":    lambda: tab2_trust.render(filters),
         "trends":   lambda: tab3_trends.render(filters),
+        "ml":       lambda: tab4_ml.render(filters),
+        "summary":  lambda: tab5_summary.render(filters),
     }
     fn = tab_map.get(active_tab)
     if fn:

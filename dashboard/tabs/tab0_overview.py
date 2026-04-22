@@ -5,34 +5,22 @@ import plotly.graph_objects as go
 import plotly.express as px
 from typing import Dict, Any
 
-from components.ui_helpers import icon_header as _icon_header, fa_callout as _fa_callout
+from components.ui_helpers import icon_header as _icon_header
 from data.loaders import load_4_tables
+from data.filters import simplify_condition_short as _simplify_condition
+from config import (
+    TEAL as _TEAL,
+    ORANGE as _ORANGE,
+    BLUE as _BLUE,
+    PURPLE as _PURPLE,
+    RED as _RED,
+    SLATE as _SLATE,
+    DARK as _DARK,
+    AMBER as _AMBER,
+    GREEN as _GREEN,
+    get_chart_palette as _get_palette,
+)
 
-# Color palette
-_TEAL   = "#0d9488"
-_ORANGE = "#f97316"
-_BLUE   = "#3b82f6"
-_PURPLE = "#7c3aed"
-_RED    = "#ef4444"
-_SLATE  = "#94a3b8"
-_DARK   = "#0f172a"
-_AMBER  = "#f59e0b"
-_GREEN  = "#22c55e"
-
-
-def _simplify_condition(cond: str) -> str | None:
-    """Map raw eBay condition strings to three canonical groups."""
-    c = str(cond).lower().strip()
-    if c == "new" or any(k in c for k in ["brand new", "new with tags", "new other"]):
-        return "New"
-    if any(k in c for k in ["used", "usato"]):
-        return "Used"
-    if any(k in c for k in [
-        "refurbished", "open box", "opened", "certified",
-        "good -", "excellent -", "very good -",
-    ]):
-        return "Refurbished"
-    return None
 
 
 # Section 1 - Dataset Snapshot
@@ -45,6 +33,10 @@ def _render_dataset_snapshot(
     df_e_raw: pd.DataFrame,
 ) -> None:
     """EDA snapshot: shape, feature types, and completeness."""
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]; _BLUE = _pal["blue"]
+    _PURPLE = _pal["purple"]; _SLATE = _pal["slate"]; _AMBER = _pal["amber"]
+    _RED = _pal["red"]; _GREEN = _pal["green"]
 
     _icon_header("fa-solid fa-database", "1. Dataset Snapshot", color=_TEAL)
 
@@ -120,6 +112,10 @@ def _render_platform_scale(
     df_p: pd.DataFrame,
     df_c: pd.DataFrame,
 ) -> None:
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]; _BLUE = _pal["blue"]
+    _PURPLE = _pal["purple"]; _SLATE = _pal["slate"]; _AMBER = _pal["amber"]
+    _RED = _pal["red"]; _GREEN = _pal["green"]
 
     _icon_header("fa-solid fa-chart-pie", "2. Platform Scale & Market Structure", color=_TEAL)
 
@@ -156,7 +152,7 @@ def _render_platform_scale(
                     font=dict(size=14, color=_DARK, family="Inter"),
                 )],
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
     merged_t = pd.DataFrame()
     top = pd.Series(dtype=int)
@@ -198,7 +194,7 @@ def _render_platform_scale(
                         height=310,
                         paper_bgcolor="rgba(0,0,0,0)",
                     )
-                    st.plotly_chart(fig2, use_container_width=True)
+                    st.plotly_chart(fig2, width='stretch')
 
     with st.expander("Chart Insights & Actionable Recommendations"):
         if not top.empty:
@@ -227,6 +223,10 @@ def _render_platform_scale(
 
 # Section 3 - Price Landscape
 def _render_price_landscape(df_t: pd.DataFrame, df_e: pd.DataFrame) -> None:
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]; _BLUE = _pal["blue"]
+    _PURPLE = _pal["purple"]; _SLATE = _pal["slate"]; _AMBER = _pal["amber"]
+    _RED = _pal["red"]; _GREEN = _pal["green"]
 
     _icon_header("fa-solid fa-scale-balanced", "3. Price Landscape", color=_ORANGE)
 
@@ -292,7 +292,7 @@ def _render_price_landscape(df_t: pd.DataFrame, df_e: pd.DataFrame) -> None:
                 height=380,
                 paper_bgcolor="rgba(0,0,0,0)",
             )
-            st.plotly_chart(fig_box, use_container_width=True)
+            st.plotly_chart(fig_box, width='stretch')
 
     with col_hist:
         with st.container(border=True):
@@ -323,7 +323,7 @@ def _render_price_landscape(df_t: pd.DataFrame, df_e: pd.DataFrame) -> None:
                 height=380,
                 paper_bgcolor="rgba(0,0,0,0)",
             )
-            st.plotly_chart(fig_hist, use_container_width=True)
+            st.plotly_chart(fig_hist, width='stretch')
 
     with st.expander("Chart Insights & Actionable Recommendations"):
         if len(tiki_p) and len(ebay_p):
@@ -363,6 +363,10 @@ def _render_product_profile(
     df_p: pd.DataFrame,
     df_c: pd.DataFrame,
 ) -> None:
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]; _BLUE = _pal["blue"]
+    _PURPLE = _pal["purple"]; _SLATE = _pal["slate"]; _AMBER = _pal["amber"]
+    _RED = _pal["red"]; _GREEN = _pal["green"]
 
     _icon_header("fa-solid fa-boxes-stacked", "4. Product Profile", color=_BLUE)
 
@@ -402,7 +406,7 @@ def _render_product_profile(
                     height=340,
                     paper_bgcolor="rgba(0,0,0,0)",
                 )
-                st.plotly_chart(fig_cond, use_container_width=True)
+                st.plotly_chart(fig_cond, width='stretch')
 
                 d1, d2, d3 = st.columns(3)
                 for i, (_, row) in enumerate(cond_counts.iterrows()):
@@ -488,7 +492,7 @@ def _render_product_profile(
                     height=390,
                     paper_bgcolor="rgba(0,0,0,0)",
                 )
-                st.plotly_chart(fig_seg, use_container_width=True)
+                st.plotly_chart(fig_seg, width='stretch')
             else:
                 st.info("No Tiki data or Discount_Segment column not available.")
 
@@ -521,6 +525,10 @@ def _render_market_health(
     df_p: pd.DataFrame,
     df_c: pd.DataFrame,
 ) -> None:
+    _pal = _get_palette()
+    _TEAL = _pal["teal"]; _ORANGE = _pal["orange"]; _BLUE = _pal["blue"]
+    _PURPLE = _pal["purple"]; _SLATE = _pal["slate"]; _AMBER = _pal["amber"]
+    _RED = _pal["red"]; _GREEN = _pal["green"]
 
     _icon_header("fa-solid fa-heart-pulse", "5. Market Health Signals", color=_PURPLE)
 
@@ -565,27 +573,10 @@ def _render_market_health(
             .rename(columns={"category": "Category", "stag_rate": "Stagnation Rate (%)", "count": "Total Products"})
         )
 
-    # Status badge helpers
-    stag_color = _RED if stag > 30 else (_AMBER if stag > 15 else _GREEN)
-    _stag_icon = "fa-circle-xmark" if stag > 30 else ("fa-triangle-exclamation" if stag > 15 else "fa-circle-check")
-    stag_status = (
-        f'<i class="fa-solid {_stag_icon}" style="margin-right:0.25rem;"></i>'
-        + ("HIGH RISK" if stag > 30 else ("WARNING" if stag > 15 else "HEALTHY"))
-    )
 
-    disc_color = _RED if disc_pct > 60 else (_AMBER if disc_pct > 40 else _TEAL)
-    _disc_icon = "fa-circle-xmark" if disc_pct > 60 else ("fa-triangle-exclamation" if disc_pct > 40 else "fa-circle-check")
-    disc_status = (
-        f'<i class="fa-solid {_disc_icon}" style="margin-right:0.25rem;"></i>'
-        + ("OVER-DISCOUNTED" if disc_pct > 60 else ("HIGH PRESSURE" if disc_pct > 40 else "NORMAL"))
-    )
-
-    new_color = _BLUE if new_pct > 50 else _ORANGE
-    _new_icon = "fa-star" if new_pct > 50 else "fa-shuffle"
-    new_status = (
-        f'<i class="fa-solid {_new_icon}" style="margin-right:0.25rem;"></i>'
-        + ("NEW-DOMINANT" if new_pct > 50 else "MIXED MARKET")
-    )
+    stag_status = "HIGH RISK" if stag > 30 else ("WARNING" if stag > 15 else "HEALTHY")
+    disc_status = "OVER-DISCOUNTED" if disc_pct > 60 else ("HIGH PRESSURE" if disc_pct > 40 else "NORMAL")
+    new_status  = "NEW-DOMINANT" if new_pct > 50 else "MIXED MARKET"
 
     e1, e2, e3 = st.columns(3)
 
@@ -595,13 +586,11 @@ def _render_market_health(
                 f"""
                 <div style="text-align:center;padding:1rem 0.5rem;">
                   <div style="font-size:0.68rem;font-weight:700;color:{_SLATE};
-                              text-transform:uppercase;letter-spacing:0.08em;">
-                    <i class="fa-solid fa-triangle-exclamation" style="color:{stag_color};
-                    margin-right:0.3rem;"></i>Tiki Stagnation Risk
-                  </div>
-                  <div style="font-size:2.4rem;font-weight:800;color:{stag_color};
+                              text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.3rem;"
+                  >Tiki Stagnation Risk</div>
+                  <div style="font-size:2.4rem;font-weight:800;color:{_DARK};
                               line-height:1.1;margin:0.4rem 0;">{stag:.1f}%</div>
-                  <div style="font-size:0.78rem;font-weight:700;color:{stag_color};
+                  <div style="font-size:0.75rem;font-weight:600;color:{_SLATE};
                               margin-bottom:0.3rem;">{stag_status}</div>
                   <div style="font-size:0.72rem;color:{_SLATE};line-height:1.4;">
                     Products with zero sales <em>and</em> zero reviews — inactive inventory
@@ -617,13 +606,11 @@ def _render_market_health(
                 f"""
                 <div style="text-align:center;padding:1rem 0.5rem;">
                   <div style="font-size:0.68rem;font-weight:700;color:{_SLATE};
-                              text-transform:uppercase;letter-spacing:0.08em;">
-                    <i class="fa-solid fa-tag" style="color:{disc_color};
-                    margin-right:0.3rem;"></i>Tiki Discount Rate
-                  </div>
-                  <div style="font-size:2.4rem;font-weight:800;color:{disc_color};
+                              text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.3rem;"
+                  >Tiki Discount Rate</div>
+                  <div style="font-size:2.4rem;font-weight:800;color:{_DARK};
                               line-height:1.1;margin:0.4rem 0;">{disc_pct:.1f}%</div>
-                  <div style="font-size:0.78rem;font-weight:700;color:{disc_color};
+                  <div style="font-size:0.75rem;font-weight:600;color:{_SLATE};
                               margin-bottom:0.3rem;">{disc_status}</div>
                   <div style="font-size:0.72rem;color:{_SLATE};line-height:1.4;">
                     Share of listings running a promotional price discount
@@ -639,13 +626,11 @@ def _render_market_health(
                 f"""
                 <div style="text-align:center;padding:1rem 0.5rem;">
                   <div style="font-size:0.68rem;font-weight:700;color:{_SLATE};
-                              text-transform:uppercase;letter-spacing:0.08em;">
-                    <i class="fa-solid fa-star" style="color:{new_color};
-                    margin-right:0.3rem;"></i>eBay New Condition
-                  </div>
-                  <div style="font-size:2.4rem;font-weight:800;color:{new_color};
+                              text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.3rem;"
+                  >eBay New Condition</div>
+                  <div style="font-size:2.4rem;font-weight:800;color:{_DARK};
                               line-height:1.1;margin:0.4rem 0;">{new_pct:.1f}%</div>
-                  <div style="font-size:0.78rem;font-weight:700;color:{new_color};
+                  <div style="font-size:0.75rem;font-weight:600;color:{_SLATE};
                               margin-bottom:0.3rem;">{new_status}</div>
                   <div style="font-size:0.72rem;color:{_SLATE};line-height:1.4;">
                     Share of eBay listings classified as brand-new condition
@@ -708,7 +693,7 @@ def _render_market_health(
                 height=300,
                 paper_bgcolor="rgba(0,0,0,0)",
             )
-            st.plotly_chart(fig_stag, use_container_width=True)
+            st.plotly_chart(fig_stag, width='stretch')
 
     with st.expander("Chart Insights & Actionable Recommendations"):
         stag_label = "HIGH RISK" if stag > 30 else ("WARNING" if stag > 15 else "HEALTHY")

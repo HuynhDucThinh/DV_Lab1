@@ -84,6 +84,23 @@ section[data-testid="stSidebar"] [data-testid="stThumbValue"] p {
 section[data-testid="stSidebar"] [data-testid="stTooltipIcon"] svg {
   fill: rgba(255,255,255,.22) !important;
 }
+
+/* Colorblind toggle button */
+section[data-testid="stSidebar"] [data-testid="stButton"][aria-label] button,
+section[data-testid="stSidebar"] button[kind="secondary"] {
+  background: rgba(255,255,255,.06) !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  color: rgba(255,255,255,.7) !important;
+  border-radius: 10px !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  transition: background 0.18s, border-color 0.18s !important;
+}
+section[data-testid="stSidebar"] button[kind="secondary"]:hover {
+  background: rgba(13,148,136,.18) !important;
+  border-color: rgba(13,148,136,.45) !important;
+  color: #5eead4 !important;
+}
 </style>
 """
 
@@ -93,6 +110,8 @@ _NAV_ITEMS = [
     ("pricing",  "fa-solid fa-tags",             "Pricing & Promotions"),
     ("trust",    "fa-solid fa-shield-halved",    "Trust & Reputation"),
     ("trends",   "fa-solid fa-chart-line",       "Characteristics & Trends"),
+    ("ml",       "fa-solid fa-brain",            "Machine Learning"),
+    ("summary",  "fa-solid fa-flag-checkered",   "Summary & Conclusion"),
 ]
 
 
@@ -347,6 +366,22 @@ def render_sidebar() -> Dict[str, Any]:
             f'</div></div>'
         )
     st.sidebar.markdown(rows_html, unsafe_allow_html=True)
+
+    # ── Colorblind Mode Toggle ────────────────────────────────────────────────
+    st.sidebar.markdown(
+        '<div style="height:1px;background:linear-gradient(90deg,'
+        'transparent,rgba(255,255,255,.09),transparent);'
+        'margin:1rem 0;"></div>',
+        unsafe_allow_html=True,
+    )
+
+    cb_on = bool(st.session_state.get("colorblind_mode", False))
+    cb_label = "👁  Mù màu: Bật" if cb_on else "👁  Mù màu: Tắt"
+    cb_help  = "Nhấn để tắt chế độ mù màu" if cb_on else "Nhấn để bật chế độ mù màu (Deuteranopia-safe)"
+
+    if st.sidebar.button(cb_label, key="cb_toggle_btn", help=cb_help, use_container_width=True):
+        st.session_state["colorblind_mode"] = not cb_on
+        st.rerun()
 
     # ── Footer ────────────────────────────────────────────────────────────────
     st.sidebar.markdown(

@@ -23,53 +23,15 @@ FA_HTML = (
 )
 
 
-def make_hero_html(colorblind_on: bool = False) -> str:
+def make_hero_html() -> str:
     """
     Return the hero banner HTML as a single string with NO blank lines.
 
     The outer wrapper has class="ec-hero" so global_css.py can float the adjacent
     st.button element up into the banner area using :has(.ec-hero) + * CSS rule.
     """
-    # ── Colorblind toggle button ──────────────────────────────────────────────
-    if colorblind_on:
-        toggle_html = (
-            "<a href='?cb=toggle' target='_self' style='text-decoration:none;'>"
-            "<div style='display:inline-flex;align-items:center;gap:6px;"
-            "background:rgba(245,158,11,.22);border:1px solid rgba(245,158,11,.55);"
-            "border-radius:20px;padding:5px 14px;margin-bottom:0.45rem;"
-            "font-size:0.74rem;font-weight:700;color:#fcd34d;cursor:pointer;'>"
-            "<svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' "
-            "fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' "
-            "stroke-linejoin='round'>"
-            "<circle cx='12' cy='12' r='3'/>"
-            "<path d='M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12"
-            "M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12'/>"
-            "</svg>"
-            "M&#249; m&#224;u: B&#7853;t"
-            "</div></a>"
-        )
-    else:
-        toggle_html = (
-            "<a href='?cb=toggle' target='_self' style='text-decoration:none;'>"
-            "<div style='display:inline-flex;align-items:center;gap:6px;"
-            "background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.2);"
-            "border-radius:20px;padding:5px 14px;margin-bottom:0.45rem;"
-            "font-size:0.74rem;font-weight:600;color:rgba(255,255,255,.7);cursor:pointer;'>"
-            "<svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' "
-            "fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' "
-            "stroke-linejoin='round'>"
-            "<path d='M9.88 9.88a3 3 0 1 0 4.24 4.24'/>"
-            "<path d='M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7"
-            "a13.16 13.16 0 0 1-1.67 2.68'/>"
-            "<path d='M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7"
-            "a9.74 9.74 0 0 0 5.39-1.61'/>"
-            "<line x1='2' x2='22' y1='2' y2='22'/>"
-            "</svg>"
-            "M&#249; m&#224;u: T&#7855;t"
-            "</div></a>"
-        )
 
-    # ── Build HTML — class="ec-hero" lets CSS float the adjacent st.button into the banner ──
+    # ── Build HTML ──────────────────────────────────────────────────────────
     return (
         '<div class="ec-hero" style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 40%,#1e293b 100%);'
         'border-radius:16px;padding:1.4rem 2rem;margin-bottom:1.1rem;'
@@ -99,8 +61,7 @@ def make_hero_html(colorblind_on: bool = False) -> str:
         '</div>'
         '</div>'
         '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;z-index:1;">'
-        + toggle_html
-        + '<div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);'
+        '<div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);'
         'border-radius:8px;padding:0.3rem 0.75rem;'
         'font-size:0.75rem;color:rgba(255,255,255,.85);font-weight:500;">'
         '<i class="fa-solid fa-calendar-check" style="margin-right:0.4rem;"></i>'
@@ -118,7 +79,7 @@ def make_hero_html(colorblind_on: bool = False) -> str:
 
 
 # ── Backward-compat alias ──────────────────────────────────────────────────────
-HERO_HTML = make_hero_html(colorblind_on=False)
+HERO_HTML = make_hero_html()
 
 # ── KPI section label ──────────────────────────────────────────────────────────
 KPI_HEADER = (
