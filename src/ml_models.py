@@ -66,8 +66,6 @@ def preprocess_and_engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 		"original_price",
 		"discount_rate",
 		"rating_average",
-		"review_count",
-		"quantity_sold",
 		TARGET_COL,
 	]
 	for col in numeric_cols:
@@ -111,8 +109,6 @@ def build_feature_matrix(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 		"original_price",
 		"discount_rate",
 		"rating_average",
-		"review_count",
-		"quantity_sold",
 		"Price_Gap",
 		"brand_freq",
 		"category_freq",
