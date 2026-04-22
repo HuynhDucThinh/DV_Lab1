@@ -12,7 +12,7 @@ Show Panel mechanism:
   The button itself is a native Streamlit widget → click reliably triggers st.rerun().
 """
 
-# ── Font Awesome 6 + Inter font (injected via st.html — bypasses sanitizer) ────
+# Font Awesome 6 + Inter font (injected via st.html — bypasses sanitizer) 
 FA_HTML = (
     '<link rel="stylesheet" '
     'href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free'
@@ -31,7 +31,7 @@ def make_hero_html() -> str:
     st.button element up into the banner area using :has(.ec-hero) + * CSS rule.
     """
 
-    # ── Build HTML ──────────────────────────────────────────────────────────
+    # ── Build HTML
     return (
         '<div class="ec-hero" style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 40%,#1e293b 100%);'
         'border-radius:16px;padding:1.4rem 2rem;margin-bottom:1.1rem;'
@@ -78,10 +78,10 @@ def make_hero_html() -> str:
     )
 
 
-# ── Backward-compat alias ──────────────────────────────────────────────────────
+# ── Backward-compat alias
 HERO_HTML = make_hero_html()
 
-# ── KPI section label ──────────────────────────────────────────────────────────
+# ── KPI section label
 KPI_HEADER = (
     '<div style="display:flex;align-items:center;gap:0.55rem;margin:0.2rem 0 0.6rem;">'
     '<i class="fa-solid fa-gauge-high" style="color:#0d9488;font-size:0.95rem;"></i>'
@@ -92,7 +92,7 @@ KPI_HEADER = (
     '</div>'
 )
 
-# ── Tab section label (kept for backward compat) ───────────────────────────────
+# ── Tab section label (kept for backward compat) 
 TAB_HEADER = (
     '<div style="display:flex;align-items:center;gap:0.55rem;margin:0.8rem 0 0.5rem;">'
     '<i class="fa-solid fa-table-columns" style="color:#0d9488;font-size:0.95rem;"></i>'
@@ -103,5 +103,5 @@ TAB_HEADER = (
     '</div>'
 )
 
-# ── Animated shimmer divider ───────────────────────────────────────────────────
+# ── Animated shimmer divider
 SHIMMER = '<div class="shimmer-line"></div>'
