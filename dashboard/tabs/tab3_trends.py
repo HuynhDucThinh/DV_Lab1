@@ -1,14 +1,13 @@
 """
-tab3_trends.py — Tab 3: Characteristics & Trends
+tab3_trends.py -- Tab 3: Characteristics & Trends
 
 Charts
-------
-1. Tiki Product Stagnation Risk           (Pareto, existing)
-2. eBay Item Condition Distribution       (Treemap + Bar, existing)
-3. Cross-Platform Price Architecture      (Overlapping KDE, Objective 9)
-4. eBay Listing Lifespan by Category      (Lollipop Chart, Objective 10)
+1. Tiki Product Stagnation Risk   (Pareto + Bubble)
+2. eBay Item Condition Analysis   (Treemap + Bar + ECDF)
+3. Cross-Platform Price KDE       (Overlapping density curves)
+4. eBay Listing Lifespan          (Lollipop Chart)
 
-Icons: Font Awesome 6 Free via CDN — no Unicode emoji used.
+Icons: Font Awesome 6 Free via CDN
 """
 
 import streamlit as st
@@ -16,49 +15,20 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from typing import Tuple, Dict, Any, List
+from typing import Tuple, Dict, Any
 
-# ── Module constants ───────────────────────────────────────────────────────────
-# Reference timestamp for computing listing age (data collection date)
-_REFERENCE_DATE = pd.Timestamp("2026-04-01")
-
-# Vietnamese tech keywords — used INTERNALLY for category matching, not displayed
-_TECH_KEYWORDS: List[str] = [
-    "điện thoại", "laptop", "máy tính", "tai nghe", "loa", "thiết bị số",
-    "phụ kiện số", "camera", "màn hình", "tivi", " tv ", "điện gia dụng",
-    "cáp", "sạc", "pin", "bàn phím", "chuột", "máy ảnh", "máy in",
-    "thiết bị mạng", "router", "modem", "smartwatch", "đồng hồ thông minh",
-    "lắp ráp", "điện tử", "sim số", "máy sấy", "máy giặt", "tủ lạnh",
-    "điều hòa", "bluetooth",
-]
-
-# ── Shared UI helpers ───────────────────────────────────────────────────────────────────
-from components.ui_helpers import icon_header as _icon_header, fa_callout as _fa_callout
-from data.loaders import load_4_tables
-from data.filters import clean_numeric, apply_global_filters
+from components.ui_helpers    import icon_header as _icon_header, fa_callout as _fa_callout
+from components.chart_helpers import compute_kde as _compute_kde, age_to_color as _age_to_color
+from data.loaders  import load_4_tables
+from data.filters  import (
+    clean_numeric,
+    apply_global_filters,
+    simplify_ebay_condition as _simplify_ebay_condition,
+)
+from config import REFERENCE_DATE as _REFERENCE_DATE, TECH_KEYWORDS as _TECH_KEYWORDS
 
 
-# ── Condition normaliser (shared by Charts 2, 3, 4) ──────────────────────────
-
-def _simplify_ebay_condition(cond: str) -> str | None:
-    """Map a raw eBay condition string to one of three canonical groups, or None."""
-    c = str(cond).lower().strip()
-    if c == "new" or any(k in c for k in ["brand new", "new with tags", "new other", "nuovo", "neu"]):
-        return "eBay — New"
-    if any(k in c for k in ["used", "usato"]):
-        return "eBay — Used"
-    if any(k in c for k in [
-        "refurbished", "open box", "opened", "certified",
-        "good -", "excellent -", "very good -",
-    ]):
-        return "eBay — Refurb / Open Box"
-    return None   # for-parts / unknown → excluded
-
-
-# ============================================================
-# CHART 1 (EXISTING): Tiki Product Stagnation Risk
-# ============================================================
-
+# Section 1 -- Tiki Product Stagnation Risk (Obj 5)
 def render_tiki_cold_start(
     df_fact_tiki: pd.DataFrame,
     df_product:   pd.DataFrame,
@@ -159,9 +129,147 @@ def render_tiki_cold_start(
             )
 
 
-# ============================================================
-# CHART 2 (EXISTING): eBay Item Condition Analysis
-# ============================================================
+    # Chart 1B — Bubble Chart: Risk Matrix (Volume vs Stagnation Rate)
+    st.markdown("##### Chart B — Risk Matrix: Product Volume vs Stagnation Rate (Bubble Chart)")
+
+    bubble_df = (
+        df.assign(is_cold=lambda x: (x["quantity_sold"] == 0) & (x["review_count"] == 0))
+        .groupby("category")["is_cold"]
+        .agg(cold_count="sum", total="count")
+        .reset_index()
+    )
+    bubble_df["rate"] = bubble_df["cold_count"] / bubble_df["total"] * 100
+    bubble_df = bubble_df[bubble_df["total"] >= 10].reset_index(drop=True)
+
+    if not bubble_df.empty:
+        zone_cfg = [
+            ("Critical (>50%)",  bubble_df[bubble_df["rate"] >  50], "#dc2626", "circle"),
+            ("Warning (30-50%)", bubble_df[(bubble_df["rate"] > 30) & (bubble_df["rate"] <= 50)], "#d97706", "circle"),
+            ("Healthy (<30%)",   bubble_df[bubble_df["rate"] <= 30], "#16a34a", "circle"),
+        ]
+
+        high_risk  = bubble_df[bubble_df["rate"] >  50]
+        warn_risk  = bubble_df[(bubble_df["rate"] > 30) & (bubble_df["rate"] <= 50)]
+        b1, b2, b3 = st.columns(3)
+        b1.metric("Critical categories (>50%)", f"{len(high_risk)}")
+        b2.metric("Warning categories (30-50%)", f"{len(warn_risk)}", delta_color="inverse")
+        b3.metric("Healthy categories (<30%)",
+                  f"{len(bubble_df) - len(high_risk) - len(warn_risk)}")
+
+        fig_bubble = go.Figure()
+        for label, sub, color, symbol in zone_cfg:
+            if sub.empty:
+                continue
+            fig_bubble.add_trace(go.Scatter(
+                x=sub["total"],
+                y=sub["rate"],
+                mode="markers",
+                name=label,
+                marker=dict(
+                    size=sub["cold_count"].clip(lower=1) ** 0.45 * 5,
+                    color=color,
+                    opacity=0.80,
+                    symbol=symbol,
+                    line=dict(color="white", width=1.5),
+                ),
+                customdata=sub[["category", "cold_count", "rate"]].values,
+                hovertemplate=(
+                    "<b>%{customdata[0]}</b><br>"
+                    "Total products: %{x:,}<br>"
+                    "Stagnation rate: <b>%{customdata[2]:.1f}%</b><br>"
+                    "Stagnant products: %{customdata[1]:,}<extra></extra>"
+                ),
+            ))
+
+        fig_bubble.add_hline(
+            y=30, line_dash="dash", line_color="#d97706", line_width=1.5,
+            annotation_text="Warning 30%", annotation_position="top right",
+            annotation_font=dict(size=10, color="#d97706"),
+        )
+        fig_bubble.add_hline(
+            y=50, line_dash="dash", line_color="#dc2626", line_width=1.5,
+            annotation_text="Critical 50%", annotation_position="top right",
+            annotation_font=dict(size=10, color="#dc2626"),
+        )
+        fig_bubble.update_layout(
+            template="plotly_white",
+            title=dict(
+                text="Risk Matrix: Total Products vs Stagnation Rate (bubble size ≈ stagnant product count)",
+                font=dict(size=13, family="Inter"),
+            ),
+            xaxis=dict(title="Total Products in Category", showgrid=True, gridcolor="#f1f5f9"),
+            yaxis=dict(title="Stagnation Rate (%)", showgrid=True, gridcolor="#f1f5f9"),
+            legend=dict(
+                title=dict(text="Risk Zone", font=dict(size=11)),
+                orientation="v", x=1.01, y=1,
+                font=dict(family="Inter", size=11),
+                bgcolor="rgba(255,255,255,0.9)",
+                bordercolor="#e2e8f0", borderwidth=1,
+            ),
+            margin=dict(t=60, b=20, l=10, r=120),
+            height=500,
+            paper_bgcolor="rgba(0,0,0,0)",
+        )
+        with st.container(border=True):
+            st.plotly_chart(fig_bubble, use_container_width=True)
+
+        with st.expander("Chart 1B Insights & Actionable Recommendations"):
+            top_crit = high_risk.nlargest(1, "cold_count") if not high_risk.empty else pd.DataFrame()
+            top_vol  = bubble_df.nlargest(1, "total").iloc[0]
+            st.markdown(
+                '<i class="fa-solid fa-circle-info" style="color:#0d9488;'
+                'margin-right:0.4rem;"></i>**How to read this chart:** '
+                'Each bubble represents one product category. '
+                '<strong>X-axis</strong> = total products listed (category size). '
+                '<strong>Y-axis</strong> = stagnation rate (% with zero sales &amp; reviews). '
+                '<strong>Bubble size</strong> ≈ absolute count of stagnant products. '
+                'Colour legend on the right shows risk zones.',
+                unsafe_allow_html=True,
+            )
+            st.divider()
+            st.markdown(
+                '<i class="fa-solid fa-magnifying-graph" style="color:#0d9488;'
+                'margin-right:0.4rem;"></i>**Chart Analysis**',
+                unsafe_allow_html=True,
+            )
+            st.write(f"""
+**Trend:** Stagnation risk is not proportional to category size. This matrix simultaneously
+shows volume (X) and severity (Y), revealing risk patterns invisible in the Pareto chart above.
+
+**Critical zone (red, >50% rate):** {len(high_risk)} categor{"y" if len(high_risk)==1 else "ies"} have
+more than half their inventory completely inactive.
+**Warning zone (orange, 30-50%):** {len(warn_risk)} categor{"y" if len(warn_risk)==1 else "ies"} are approaching critical status.
+
+**Quadrant analysis:**
+- **Top-right (large + high rate):** Highest business impact — large volume means even a small
+  rate reduction yields many active products recovered.
+- **Top-left (small + high rate):** Disproportionately severe stagnation for a niche category —
+  consider whether the category has sufficient demand to justify continued listings.
+- **Bottom-right (large + healthy):** Benchmark categories — study what drives their performance.
+""")
+            st.markdown(
+                '<i class="fa-solid fa-lightbulb" style="color:#f59e0b;'
+                'margin-right:0.4rem;"></i>**Recommended Actions**',
+                unsafe_allow_html=True,
+            )
+            st.write("""
+* **Red bubbles (top-right):** Prioritise immediately — audit pricing, listing quality,
+  and platform visibility. Even a 10% rate recovery has the largest absolute impact.
+* **Orange bubbles:** Launch targeted review-incentive campaigns to generate first
+  interactions and break the cold-start cycle before they cross the critical threshold.
+* **Green bubbles (bottom-right):** Extract best practices and replicate strategy
+  across underperforming categories.
+""")
+            st.markdown(
+                '<i class="fa-solid fa-arrow-right-long" style="color:#ef4444;margin-right:0.4rem;"></i>'
+                '<em>Use Chart 1A (Pareto) for absolute scale — Chart 1B (Risk Matrix) for prioritisation.</em>',
+                unsafe_allow_html=True,
+            )
+    else:
+        st.info("Insufficient data for bubble chart (min. 10 products per category).")
+
+
+# Section 2 — eBay Item Condition Analysis
 
 def render_ebay_condition_analysis(df_fact_ebay: pd.DataFrame) -> None:
     """Treemap + horizontal bar: eBay condition market share and average cost."""
@@ -268,49 +376,154 @@ def render_ebay_condition_analysis(df_fact_ebay: pd.DataFrame) -> None:
             )
 
 
-# ── Gaussian KDE — no scipy required ──────────────────────────────────────────
+    # Chart 2C — ECDF: Cumulative Price Distribution by Item Condition
+    st.markdown("##### Chart B — Cumulative Price Distribution by Condition (ECDF)")
 
-def _compute_kde(
-    values:   np.ndarray,
-    n_points: int   = 500,
-    trim_pct: float = 99.0,
-) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Vectorized Gaussian KDE using Scott's bandwidth rule.
-    Subsamples up to 6,000 observations for performance.
+    cond_palette = {
+        "eBay — New":               "#1f77b4",
+        "eBay — Used":              "#94a3b8",
+        "eBay — Refurb / Open Box": "#8b5cf6",
+    }
 
-    Returns
-    -------
-    x   : evaluation grid
-    kde : probability density at each grid point
-    """
-    values = values[np.isfinite(values)]
-    n = len(values)
-    if n < 5:
-        return np.array([]), np.array([])
+    fig_ecdf = go.Figure()
+    ecdf_stats: dict = {}
+    for cond, color in cond_palette.items():
+        cond_data = df[df["Standard_Condition"] == cond]["Total_Cost_VND"].dropna()
+        if len(cond_data) < 2:
+            continue
+        sorted_vals = np.sort(cond_data.values / 1e6)
+        ecdf_y = np.arange(1, len(sorted_vals) + 1) / len(sorted_vals)
+        fig_ecdf.add_trace(go.Scatter(
+            x=sorted_vals,
+            y=ecdf_y * 100,
+            mode="lines",
+            name=cond,
+            line=dict(color=color, width=2.5),
+            hovertemplate=(
+                f"<b>{cond}</b><br>"
+                "Price: %{x:.2f}M VND<br>"
+                "Cumulative: %{y:.1f}% of listings<extra></extra>"
+            ),
+        ))
+        med = float(np.median(sorted_vals))
+        p80 = float(np.percentile(sorted_vals, 80))
+        ecdf_stats[cond] = {"median": med, "p80": p80, "n": len(sorted_vals)}
+        fig_ecdf.add_vline(
+            x=med, line_dash="dot", line_color=color, line_width=1.5, opacity=0.7,
+            annotation_text=f"{med:.1f}M (50%)",
+            annotation_font=dict(size=9, color=color),
+            annotation_position="top right",
+        )
 
-    bw = 1.06 * np.std(values) * n ** (-0.2)
-    if bw <= 0:
-        return np.array([]), np.array([])
+    trim_pct_ecdf = df["Total_Cost_VND"].quantile(0.98) / 1e6
+    fig_ecdf.update_layout(
+        template="plotly_white",
+        title=dict(
+            text="Empirical CDF: What % of listings cost ≤ X? (by Item Condition)",
+            font=dict(size=13, family="Inter"),
+        ),
+        xaxis=dict(
+            title="Total Cost (Million VND)",
+            showgrid=True, gridcolor="#f1f5f9",
+            range=[0, trim_pct_ecdf],
+        ),
+        yaxis=dict(
+            title="Cumulative % of Listings",
+            showgrid=True, gridcolor="#f1f5f9",
+            ticksuffix="%", range=[0, 103],
+        ),
+        legend=dict(
+            orientation="h", yanchor="bottom", y=1.02,
+            xanchor="right", x=1,
+            font=dict(family="Inter", size=11),
+        ),
+        margin=dict(t=70, b=20, l=10, r=10),
+        height=440,
+        hovermode="x unified",
+        paper_bgcolor="rgba(0,0,0,0)",
+    )
+    with st.container(border=True):
+        st.plotly_chart(fig_ecdf, use_container_width=True)
 
-    x_lo = np.percentile(values, 100 - trim_pct)
-    x_hi = np.percentile(values, trim_pct)
-    if x_lo >= x_hi:
-        return np.array([]), np.array([])
+    with st.expander("Chart 2C Insights & Actionable Recommendations"):
+        if ecdf_stats:
+            st.markdown(
+                '<i class="fa-solid fa-circle-info" style="color:#0369a1;'
+                'margin-right:0.4rem;"></i>**How to read this chart:** '
+                'The Y-axis answers: <em>"What % of listings cost ≤ X VND?"</em> '
+                'A curve rising steeply at low X means most listings are affordable. '
+                'Dotted vertical lines mark the <strong>median</strong> of each condition. '
+                'Hover anywhere to compare all three conditions at the same price point.',
+                unsafe_allow_html=True,
+            )
+            st.divider()
 
-    x = np.linspace(x_lo, x_hi, n_points)
+            # Derive key stats from runtime data
+            sorted_conds = sorted(ecdf_stats.items(), key=lambda x: x[1]["median"])
+            cheapest_cond, cheapest_s = sorted_conds[0]
+            priciest_cond, priciest_s = sorted_conds[-1]
+            median_gap = priciest_s["median"] - cheapest_s["median"]
 
-    rng    = np.random.default_rng(42)
-    sample = values if n <= 6_000 else rng.choice(values, 6_000, replace=False)
+            # Find steepest (most price-concentrated) = smallest p80 - median gap
+            spread = {c: s["p80"] - s["median"] for c, s in ecdf_stats.items()}
+            most_concentrated = min(spread, key=spread.get)
+            widest_spread     = max(spread, key=spread.get)
 
-    diff = (x[:, None] - sample[None, :]) / bw
-    kde  = np.exp(-0.5 * diff ** 2).mean(axis=1) / (bw * np.sqrt(2 * np.pi))
-    return x, kde
+            st.markdown(
+                '<i class="fa-solid fa-magnifying-glass" style="color:#0d9488;'
+                'margin-right:0.4rem;"></i>**Chart Analysis**',
+                unsafe_allow_html=True,
+            )
+            stat_lines = "\n".join(
+                f"- **{c}**: median = **{s['median']:.2f}M VND** | "
+                f"80th percentile = **{s['p80']:.2f}M VND** | "
+                f"N = {s['n']:,} listings"
+                for c, s in ecdf_stats.items()
+            )
+            st.write(f"""
+**Trend:** The ECDF curves show the cumulative price accumulation for each condition group.
+A curve that reaches 50% sooner (further left) indicates a **cheaper** condition group overall.
+
+{stat_lines}
+
+**Median gap:** The spread between the cheapest (**{cheapest_cond}** at {cheapest_s['median']:.2f}M)
+and priciest (**{priciest_cond}** at {priciest_s['median']:.2f}M) is **{median_gap:.2f}M VND**.
+
+**Price concentration:** **{most_concentrated}** has the steepest curve slope — prices cluster
+tightly, making procurement costs highly predictable. **{widest_spread}** has the widest
+spread between median and P80, indicating greater pricing variability within that group.
+
+**Difference from Chart 2B (Bar):** Chart 2B showed only `mean` per condition — easily skewed
+by expensive outliers. Chart 2C shows the full price ladder: for any budget threshold you can
+read exactly how many listings are reachable without needing a single summary statistic.
+""")
+            st.markdown(
+                '<i class="fa-solid fa-lightbulb" style="color:#f59e0b;'
+                'margin-right:0.4rem;"></i>**Procurement Strategy**',
+                unsafe_allow_html=True,
+            )
+            st.write(f"""
+* Set a **budget ceiling** on the X-axis and read each curve's Y-value to know what % of
+  listings are within reach per condition — without relying on misleading averages.
+* **{most_concentrated}** offers the highest price predictability (steep curve) — best
+  suited for bulk procurement with fixed budgets.
+* Where ECDF curves **cross**: at that price, both conditions cover the same % of listings
+  — prefer the higher-quality condition at no additional cumulative cost.
+* Use this chart alongside Chart 2B (mean bar) to spot conditions where outliers
+  significantly inflate the average above the median.
+""")
+            st.markdown(
+                '<i class="fa-solid fa-arrow-right-long" style="color:#0369a1;margin-right:0.4rem;"></i>'
+                '<em>For seller-level price analysis — navigate to <strong>Tab: Trust &amp; Reputation</strong></em>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.info("Insufficient data to generate ECDF insights.")
 
 
-# ============================================================
-# CHART 3 (NEW — Objective 9): Overlapping KDE Plot
-# ============================================================
+# Section 3 -- Cross-Platform KDE (Obj 9) -- compute_kde from components.chart_helpers
+
+# Section 3 -- Overlapping KDE Plot (Objective 9)
 
 def render_price_kde_comparison(
     df_tiki:     pd.DataFrame,
@@ -325,14 +538,8 @@ def render_price_kde_comparison(
     """
     _icon_header(
         "fa-solid fa-chart-area",
-        "3. Cross-Platform Price Architecture — Overlapping KDE  &middot;  Objective 9",
+        "3. Cross-Platform Price Architecture — Overlapping KDE",
         color="#0d9488",
-    )
-    st.markdown(
-        "Compares the **probability density of prices (VND)** for Tiki tech/electronics "
-        "listings against eBay condition groups. Vertical dotted lines mark each "
-        "group's **median**, enabling direct measurement of the price premium or discount "
-        "between platforms."
     )
 
     # Filter Tiki → tech/electronics
@@ -520,22 +727,16 @@ def render_ebay_lollipop_lifespan(
     df_category:  pd.DataFrame,
 ) -> None:
     """
-    Chart 4 — Objective 10
+    Chart 4 
     Lollipop chart: average listing age per eBay top-N categories,
     identifying the fastest- and slowest-turnover market segments.
     """
     _icon_header(
         "fa-solid fa-hourglass-half",
-        "4. eBay Listing Lifespan by Category — Lollipop Chart  &middot;  Objective 10",
+        "4. eBay Listing Lifespan by Category — Lollipop Chart",
         color="#7c3aed",
     )
-    st.markdown(
-        "Estimates the **average listing age** of eBay products — measured from "
-        "`item_creation_date` to the data-collection date of **01 Apr 2026** — "
-        "to identify the categories with the **fastest market turnover** (young listings) "
-        "versus those with **slow absorption** (stagnant, long-lived listings)."
-    )
-
+   
     if df_fact_ebay.empty:
         st.info("No eBay listings match the current filters. Adjust the sidebar.")
         return
@@ -782,23 +983,39 @@ def render_ebay_lollipop_lifespan(
         )
 
 
-# ============================================================
-# MAIN RENDER ENTRY-POINT
-# ============================================================
+# Main render entry-point — invoked by app.py
 
 def render(filters: Dict[str, Any]) -> None:
-    """Tab 3 entry-point — Characteristics & Trends (4 charts)."""
-
+    """
+    Characteristics & Trends tab — 4 sections answering Objectives 5, 6, 9 & 10.
+    Section 1: Tiki stagnation risk — Pareto + Rate % (Obj 5)
+    Section 2: eBay condition distribution + cost impact — Treemap, Bar, Boxplot (Obj 6)
+    Section 3: Cross-platform price KDE — Overlapping density curves (Obj 9)
+    Section 4: eBay listing lifespan — Lollipop chart (Obj 10)
+    """
     _icon_header(
         "fa-solid fa-chart-line",
         "Characteristics &amp; Trends",
         level=2,
         color="#0d9488",
     )
-    st.markdown(
-        "A comprehensive overview of listing characteristics and pricing behaviour, "
-        "bridging the **B2C pipeline (Tiki)** with the **C2C/B2C hybrid structure (eBay)**."
-    )
+
+    with st.expander("About this tab"):
+        st.markdown(
+            "This tab provides a comprehensive overview of **listing characteristics and market behaviour** "
+            "across both platforms. Four analytical sections answer distinct research questions:\n\n"
+            "- **Section 1 (Tiki):** Which product categories carry the highest stagnation risk? "
+            "Analysed by absolute volume (Pareto) and normalised rate (%) side-by-side.\n"
+            "- **Section 2 (eBay):** How does item condition (New / Used / Refurb) shape market share "
+            "and final buyer cost? Visualised via Treemap, average cost bar, and full price distribution (Boxplot).\n"
+            "- **Section 3 (Cross-platform):** How do price density curves differ between Tiki tech products "
+            "and eBay condition groups? KDE overlap reveals median divergence and segment advantage.\n"
+            "- **Section 4 (eBay):** Which categories have the fastest vs slowest listing turnover? "
+            "Lollipop chart ranked by average listing age, colour-coded green (fast) to red (slow).\n\n"
+            "Read top-to-bottom to follow the analytical narrative from **Tiki risk signals** "
+            "through **eBay market structure** to **cross-platform price dynamics**."
+        )
+
 
     try:
         df_fact_tiki, df_fact_ebay, df_product, df_category = load_4_tables()
@@ -811,21 +1028,25 @@ def render(filters: Dict[str, Any]) -> None:
 
     df_tiki_f, df_ebay_f = apply_global_filters(df_fact_tiki, df_fact_ebay, filters)
 
-    # Chart 1 — Pareto (existing)
+    st.divider()
+
+    # Section 1 — Tiki Stagnation Risk (Obj 5)
     with st.container():
         render_tiki_cold_start(df_tiki_f, df_product, df_category)
     st.divider()
 
-    # Chart 2 — eBay Condition (existing)
+    # Section 2 — eBay Condition Analysis (Obj 6)
     with st.container():
         render_ebay_condition_analysis(df_ebay_f)
     st.divider()
 
-    # Chart 3 — Overlapping KDE (Objective 9)
+    # Section 3 — Cross-Platform KDE (Obj 9)
     with st.container():
         render_price_kde_comparison(df_tiki_f, df_ebay_f, df_product, df_category)
     st.divider()
 
-    # Chart 4 — Lollipop Lifespan (Objective 10)
+    # Section 4 — eBay Listing Lifespan (Obj 10)
     with st.container():
         render_ebay_lollipop_lifespan(df_ebay_f, df_product, df_category)
+
+    st.divider()
