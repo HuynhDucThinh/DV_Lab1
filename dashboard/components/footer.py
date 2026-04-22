@@ -12,8 +12,11 @@ def render_footer() -> None:
     """Render the light-themed feature footer for the E-commerce Analytics Dashboard."""
 
     members = [
-        "Huynh Duc Thinh",
-        "Nguyen Minh Nhut",
+        "Phạm Ngọc Thanh",
+        "Cao Tiến Thành",
+        "Lê Hà Thanh Chương",
+        "Nguyễn Nhựt Thanh",
+        "Huỳnh Đức Thịnh",
     ]
 
     member_chips = "".join(
@@ -89,7 +92,7 @@ def render_footer() -> None:
 <div class="ec-ftr-divider"></div>
 <div class="ec-ftr-text">Ho Chi Minh City University of Science</div>
 <div class="ec-ftr-divider"></div>
-<div class="ec-ftr-text">Instructor: Bui Tien Len</div>
+<div class="ec-ftr-text">Instructor: Trần Huy Bân, Võ Nhật Tân</div>
 <div class="ec-ftr-divider"></div>
 <div class="ec-ftr-text">Data Visualization Lab · 2026</div>
 </div>
