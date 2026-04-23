@@ -12,13 +12,11 @@ Layout inspired by Vietnam-Air-Quality-Dashboard:
 GLOBAL_CSS = """
 <style>
 
-/* ── External fonts & icons ────────────────────────────────────────────────── */
+/* External fonts & icons */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import url('https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css');
 
-/* ═══════════════════════════════════════════════════════════════════
-   DESIGN TOKENS
-   ═══════════════════════════════════════════════════════════════════ */
+/* DESIGN TOKENS */
 :root {
   /* Brand */
   --clr-teal:      #0d9488;
@@ -56,15 +54,13 @@ GLOBAL_CSS = """
   --transition:    0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   RESET & BASE
-   ═══════════════════════════════════════════════════════════════════ */
+/* RESET & BASE */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, [class*="css"] {
   font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
 }
 
-/* ── Hide all Streamlit chrome ──────────────────────────────────── */
+/* Hide all Streamlit chrome */
 [data-testid="stHeader"]               { display: none !important; }
 [data-testid="stToolbar"]              { display: none !important; }
 [data-testid="stDecoration"]           { display: none !important; }
@@ -76,11 +72,11 @@ button[aria-label="Open sidebar"]      { display: none !important; }
 #MainMenu                              { display: none !important; }
 footer                                 { display: none !important; }
 
-/* ── Sidebar visibility toggle via body class (mirrors cb-mode pattern) ── */
+/* Sidebar visibility toggle via body class (mirrors cb-mode pattern) */
 body.sb-hidden section[data-testid="stSidebar"] { display: none !important; }
 
 
-/* ── Close Panel ✕: circular icon button in sidebar header ─────────────── */
+/* Close Panel ✕: circular icon button in sidebar header */
 section[data-testid="stSidebar"]
   [data-testid="stHorizontalBlock"]
   [data-testid="stBaseButton-secondary"] button,
@@ -116,7 +112,7 @@ section[data-testid="stSidebar"]
   transform: rotate(90deg) !important;
 }
 
-/* ── Show Panel › : hidden by default, revealed when cursor enters top-left ──
+/* Show Panel › : hidden by default, revealed when cursor enters top-left */
    #sb-trigger  = a transparent 72×72px position:fixed div at top:0 left:0
                   rendered ONLY when sidebar is hidden (app.py).
    Default       → button off-screen (left:-200px) + opacity:0 + no pointer events
@@ -176,9 +172,7 @@ section[data-testid="stSidebar"]
   line-height: 1 !important;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   MAIN CONTENT AREA
-   ═══════════════════════════════════════════════════════════════════ */
+/* MAIN CONTENT AREA */
 [data-testid="stAppViewContainer"] > .main {
   background: linear-gradient(135deg, #f0fdf9 0%, #f8fafc 45%, #f0f4ff 100%);
   background-attachment: fixed;
@@ -229,7 +223,7 @@ section[data-testid="stSidebar"]
   padding-top: 0 !important;
 }
 
-/* ─── Sidebar (dark) ─────────────────────────────────────────────── */
+/* Sidebar (dark) */
 section[data-testid="stSidebar"],
 section[data-testid="stSidebar"] > div:first-child {
   background: linear-gradient(180deg, #0f172a 0%, #111827 60%, #0d1b2a 100%) !important;
@@ -256,9 +250,7 @@ section[data-testid="stSidebar"] [data-testid="stSidebarContent"] > div:first-ch
 
 
 
-/* ═══════════════════════════════════════════════════════════════════
-   SHADCN METRIC CARDS
-   ═══════════════════════════════════════════════════════════════════ */
+/* SHADCN METRIC CARDS */
 [data-testid="stHorizontalBlock"] > div {
   transition: transform var(--transition), box-shadow var(--transition);
 }
@@ -267,9 +259,7 @@ section[data-testid="stSidebar"] [data-testid="stSidebarContent"] > div:first-ch
   box-shadow: var(--shadow-lg);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   CONTENT CONTAINERS / CARDS
-   ═══════════════════════════════════════════════════════════════════ */
+/* CONTENT CONTAINERS / CARDS */
 [data-testid="stVerticalBlockBorderWrapper"] {
   border: 1px solid var(--clr-slate-200) !important;
   border-radius: var(--radius-lg) !important;
@@ -352,9 +342,7 @@ hr {
   font-size: 0.83rem !important;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   FADE-IN ANIMATION
-   ═══════════════════════════════════════════════════════════════════ */
+/* FADE-IN ANIMATION */
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -363,9 +351,7 @@ hr {
   animation: fadeSlideIn 0.32s ease both;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   SCROLLBAR
-   ═══════════════════════════════════════════════════════════════════ */
+/* SCROLLBAR */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
@@ -374,9 +360,7 @@ hr {
 }
 ::-webkit-scrollbar-thumb:hover { background: rgba(13,148,136,.6); }
 
-/* ═══════════════════════════════════════════════════════════════════
-   SHIMMER DIVIDER
-   ═══════════════════════════════════════════════════════════════════ */
+/* SHIMMER DIVIDER */
 @keyframes shimmer {
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
@@ -396,10 +380,7 @@ hr {
   margin: 0.5rem 0 1.2rem;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   COLORBLIND MODE — body.cb-mode remaps all accent colours to a
-   blue-orange deuteranopia-safe palette
-   ═══════════════════════════════════════════════════════════════════ */
+/* COLORBLIND MODE — body.cb-mode remaps all accent colours to a blue-orange deuteranopia-safe palette */
 body.cb-mode {
   --clr-teal:    #0077bb;   /* safe blue  */
   --clr-teal-lt: #33aadd;
@@ -443,7 +424,7 @@ body.cb-mode [data-testid="stMetric"] {
   border-top: 2px solid #0077bb !important;
 }
 
-/* ── CB Mode indicator banner ──────────────────────────────────── */
+/*CB Mode indicator banner */
 body.cb-mode::after {
   content: 'COLORBLIND MODE';
   position: fixed;
@@ -461,9 +442,7 @@ body.cb-mode::after {
   pointer-events: none;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   MEGA FOOTER (ec-ftr-*) — Light theme, matches dashboard palette
-   ═══════════════════════════════════════════════════════════════════ */
+/* MEGA FOOTER (ec-ftr-*) — Light theme, matches dashboard palette */
 .ec-ftr-wrapper {
   background: #f8fafc;
   margin-top: 2.5rem;
@@ -609,21 +588,19 @@ body.cb-mode::after {
 }
 
 
-/* ── Shadcn iframe tab bar (hidden when using nav rail) ─────────── */
+/* Shadcn iframe tab bar (hidden when using nav rail)*/
 iframe[title="streamlit_shadcn_ui.tabs"] {
   margin-bottom: 0 !important;
   border-radius: var(--radius-lg) !important;
 }
 
-/* ── Shadcn metric_card inner padding ────────────────────────────── */
+/* Shadcn metric_card inner padding */
 iframe[title="streamlit_shadcn_ui.metric_card"] {
   border-radius: var(--radius-md) !important;
 }
 
 
-/* ═══════════════════════════════════════════════════════════════════
-   MULTISELECT — Brand teal chips across all tabs
-   ═══════════════════════════════════════════════════════════════════ */
+/* MULTISELECT — Brand teal chips across all tabs */
 
 /* Container input border */
 [data-testid="stMultiSelect"] [data-baseweb="select"] > div {
