@@ -1,0 +1,52 @@
+\section{Thông tin nhóm}
+
+\newlist{tableitemize}{itemize}{1}
+\setlist[tableitemize]{
+    label=\textbullet, 
+    leftmargin=1.2em, 
+    nosep, 
+    before=\vspace{-0.5\baselineskip},
+    after=\vspace{0.2\baselineskip} 
+}
+
+\begin{center}
+    \newcounter{memberrow} 
+    \setcounter{memberrow}{0}
+    \renewcommand{\arraystretch}{1.4}
+    
+    \begin{tabularx}{\textwidth}{|>{\stepcounter{memberrow}\thememberrow}c|p{3.5cm}|c|X|c|}
+        \hline
+        \multicolumn{1}{|c|}{\textbf{STT}} & \centering\textbf{Họ và tên} & \textbf{MSSV} & \centering\textbf{Nhiệm vụ chính} & \textbf{Đóng góp} \\
+        \hline
+        & Phạm Ngọc Thanh & 23120087 & 
+        \begin{tableitemize}
+            \item Thu thập dữ liệu từ sàn TMĐT
+            \item Viết báo cáo phần thu thập dữ liệu
+        \end{tableitemize} & 20\% \\ \hline
+        & Cao Tiến Thành & 23120088 & 
+        \begin{tableitemize}
+            \item Thu thập dữ liệu từ sàn TMĐT
+            \item Tiền xử lý dữ liệu (EDA)
+            \item Xử lý missing values và outliers
+            \item Phân tích khám phá dữ liệu
+        \end{tableitemize} & 20\% \\ \hline
+        & Lê Hà Thanh Chương & 23120195 & 
+        \begin{tableitemize}
+            \item Trực quan hóa dữ liệu
+            \item Xây dựng các biểu đồ phân tích
+            \item Thiết kế Dashboard
+        \end{tableitemize} & 20\% \\ \hline
+        & Nguyễn Nhựt Thanh & 23120198 & 
+        \begin{tableitemize}
+            \item Phát triển Interactive Dashboard
+            \item Tích hợp các thành phần tương tác
+            \item Testing và debugging
+        \end{tableitemize} & 20\% \\ \hline
+        & Huỳnh Đức Thịnh & 23120199 & 
+        \begin{tableitemize}
+            \item Phân tích và biện luận kết quả
+            \item Viết báo cáo tổng hợp
+            \item Chuẩn bị bài thuyết trình
+        \end{tableitemize} & 20\% \\ \hline
+    \end{tabularx}
+\end{center}

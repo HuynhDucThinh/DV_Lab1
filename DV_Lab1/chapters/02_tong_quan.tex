@@ -1,0 +1,58 @@
+\section{Tổng quan bài toán}
+
+\subsection{Bối cảnh và động lực}
+
+Trong những năm gần đây, các sàn thương mại điện tử như Shopee, Lazada, Tiki, Sendo, Amazon, eBay đã tạo ra một khối lượng dữ liệu khổng lồ liên quan đến sản phẩm, giá bán, lượt bán, đánh giá người dùng, thông tin cửa hàng và các chương trình khuyến mãi.
+
+Tuy nhiên, phần lớn dữ liệu này chỉ được hiển thị rời rạc trên từng trang sản phẩm và chưa được khai thác có hệ thống nhằm phục vụ phân tích xu hướng thị trường, hành vi tiêu dùng hay hiệu quả kinh doanh. Đặc biệt, sự tồn tại song song của các mô hình kinh doanh khác biệt — điển hình như mô hình B2C (Business-to-Consumer) chú trọng vào hàng chính hãng và các chiến dịch khuyến mãi sâu so với mô hình C2C/B2C toàn cầu chú trọng vào sự đa dạng, tình trạng hàng hóa và độ uy tín cá nhân đã tạo ra những bức tranh tiêu dùng vô cùng phức tạp.
+
+Sự thiếu hụt một hệ thống phân tích đối chiếu chéo khiến các nhà bán lẻ và quản lý nền tảng khó  xác định được đâu là yếu tố cốt lõi thúc đẩy quyết định mua hàng trong từng môi trường cụ thể. Việc giải quyết khoảng trống thông tin này chính là động lực cốt lõi để nhóm thực hiện đồ án.
+
+\subsection{Bài toán phân tích chung của nhóm}
+
+\textbf{Bài toán:} Phân tích đối chiếu đa nền tảng: Đánh giá tác động của chiến lược định giá, đặc tính sản phẩm và độ uy tín của gian hàng đến hiệu suất tương tác và bán hàng trên hai mô hình thương mại điện tử (Tiki và eBay).
+
+Cụ thể, nhóm sử dụng 5 bảng dữ liệu quan hệ (dim\_product, dim\_seller, dim\_category, fact\_tiki\_listings, fact\_ebay\_listings) được làm sạch và chuẩn hóa từ hai nền tảng Tiki và eBay để làm rõ cơ chế hoạt động của thị trường trực tuyến. Bài toán chung này được thiết kế để bao trùm toàn bộ hệ sinh thái E-commerce, được định hình qua 3 nhóm phân tích chính:
+
+\begin{enumerate}
+    \item Nhóm định giá \& khuyến mãi: Khảo sát sự phân bổ giá cả và đo lường mức độ tác động của các chiến dịch giảm giá hoặc chính sách miễn phí vận chuyển lên khả năng tiếp cận khách hàng.
+    \item Nhóm uy tín \& niềm tin: Đánh giá phản ứng của thị trường đối với điểm số đánh giá của sản phẩm trên Tiki và hệ thống phân cấp uy tín người bán trên eBay.
+    \item Nhóm đặc tính \& xu hướng: Tìm hiểu mối liên hệ giữa tình trạng sản phẩm, danh mục hàng hóa với khả năng bán hàng và sự hình thành của các sản phẩm đang bán chạy.
+\end{enumerate}
+
+\subsection{Mục tiêu phân tích của từng thành viên}
+
+Từ bài toán chung, mỗi thành viên đề xuất hướng phân tích riêng tuân theo nguyên tắc SMART:
+
+\subsubsection{Thành viên 1: Phạm Ngọc Thanh}
+
+\textbf{Mục tiêu 1:} Đánh giá cấu trúc phân phối mức giá của các mặt hàng trên nền tảng Tiki, nhằm xác định khoảng giá tập trung nhiều sản phẩm nhất, nhận diện outliers và hiểu rõ định vị phân khúc giá trị của Tiki. Kết quả này làm cơ sở dữ liệu để đối chiếu với mô hình định giá của eBay, từ đó làm rõ tác động của yếu tố giá cả đến hành vi tương tác và hiệu suất bán hàng của người dùng trên mỗi nền tảng.
+
+\textbf{Mục tiêu 2:} Đánh giá tác động của các chương trình khuyến mãi (đo lường qua Discount Rate và Discount Segment) đến hiệu quả bán hàng thông qua sản lượng tiêu thụ và khả năng trở thành sản phẩm bán chạy. Dựa trên việc tính toán tổng sản lượng và tỷ lệ Best Seller theo từng nhóm giảm giá, xây dựng biểu đồ cột kết hợp với các bộ lọc trên Dashboard để trực quan hóa xem mức giảm giá nào kích thích nhu cầu mua sắm tốt nhất.
+
+\subsubsection{Thành viên 2: Cao Tiến Thành}
+
+\textbf{Mục tiêu 3:} Phân tích sự khác biệt về phân phối giá niêm yết và tổng chi phí cuối cùng giữa các nhóm sản phẩm công nghệ chủ lực trên eBay (laptop, smartphone, tablet, camera, monitor, headphones, smartwatch và gaming console) nhằm xác định chính xác 3 danh mục có mức giá trung vị cao nhất, đồng thời đo lường độ biến động giá trong từng nhóm bằng các chỉ số như median, IQR và standard deviation, từ đó xây dựng bộ trực quan hóa gồm Box Plot kết hợp Violin Plot để tích hợp vào trang phân tích giá của Dashboard trước cuối tuần thứ 3 của đồ án.
+
+
+\textbf{Mục tiêu 4:} Phân tích tác động của chính sách phí vận chuyển đến quyết định định giá trên eBay thông qua việc so sánh giữa giá niêm yết ban đầu, chi phí vận chuyển và tổng chi phí thanh toán thực tế nhằm xác định tỷ lệ sản phẩm miễn phí vận chuyển, 3 danh mục có mức phụ phí vận chuyển cao nhất và mức độ đội giá trung bình mà người mua phải chịu, từ đó hoàn thiện trực quan hóa bằng Stacked Bar Chart kết hợp Scatter Plot để phục vụ phần biện luận về hành vi định giá và tối ưu chi phí trước thời điểm khóa Dashboard bản giữa kỳ.
+
+\subsubsection{Thành viên 3: Lê Hà Thanh Chương}
+
+\textbf{Mục tiêu 5:} Phân tích tổng quan tỷ lệ sản phẩm mới (chưa có lượt bán và đánh giá nào) trên toàn bộ danh mục sản phẩm của sàn Tiki để xác định chính xác 3 ngành hàng có nguy cơ tồn kho cao nhất. Sau đó, tạo biểu đồ Pareto trực quan để thể hiện tình trạng này và đưa vào báo cáo tổng hợp trước cuối tuần thứ 3 của đồ án.
+
+\textbf{Mục tiêu 6:} Phân tích sự phân bổ của các nhóm tình trạng sản phẩm (New, Used, Refurbished) và đo lường mức độ tác động của chúng đến tổng chi phí cuối cùng trên nền tảng eBay nhằm xác định phân khúc tình trạng máy chiếm thị phần lớn nhất, từ đó hoàn thiện trực quan hóa bằng biểu đồ Treemap kết hợp Bar Chart trước cuối tuần thứ 2 của đồ án.
+
+\subsubsection{Thành viên 4: Nguyễn Nhựt Thanh}
+
+\textbf{Mục tiêu 7:} Phân tích tác động của điểm đánh giá trung bình đến doanh số bán hàng trên nền tảng Tiki thông qua việc phân nhóm sản phẩm thành 4 mức đánh giá (Chưa có đánh giá: $0$, Thấp: $1-3$, Trung bình: $3-4$, Cao: $4-5$) nhằm xác định chính xác mức đánh giá có doanh số trung bình cao nhất, đồng thời so sánh sự khác biệt này giữa 3 danh mục có số lượng sản phẩm nhiều nhất, từ đó hoàn thiện trực quan hóa bằng \textit{Bar Chart} kết hợp \textit{Grouped Bar Chart} để phục vụ phần biện luận về cơ chế niềm tin người tiêu dùng trên sàn thương mại điện tử nội địa.
+
+\textbf{Mục tiêu 8:} Phân tích mức độ ảnh hưởng của uy tín người bán đến giá niêm yết sản phẩm trên nền tảng eBay thông qua việc phân tầng người bán thành 4 nhóm uy tín dựa trên ngưỡng \textit{feedback\_score} nhằm xác định chính xác tầng uy tín có mức giá trung bình cao nhất và thấp nhất, đồng thời đo lường độ phân tán giá trong từng tầng bằng chỉ số \textit{median} và \textit{IQR}, từ đó xây dựng trực quan hóa bằng \textit{Bar Chart} kết hợp \textit{Box Plot} phân tầng để tích hợp vào Tab \textit{Trust \& Reputation} của Dashboard.
+
+\subsubsection{Thành viên 5: Huỳnh Đức Thịnh}
+
+\textbf{Mục tiêu 9:} So sánh sự phân bổ mức giá cuối cùng đã chuẩn hóa của nhóm hàng công nghệ/điện tử giữa Tiki (hàng mới, chính hãng) và eBay (New, Used, Refurbished) để đo lường mức độ chênh lệch giá trị trung vị, qua đó biểu diễn bằng biểu đồ Overlapping KDE Plot nhằm xác định lợi thế phân khúc của từng sàn trước thời hạn nộp bản nháp Dashboard 5 ngày.
+
+\textbf{Mục tiêu 10:} Đánh giá vòng đời đăng bán trung bình của các sản phẩm thuộc 5 danh mục có số lượng bài đăng cao nhất trên eBay nhằm xác định ngành hàng có tốc độ đào thải hoặc luân chuyển nhanh nhất thị trường, phục vụ việc xây dựng biểu đồ Lollipop Chart tích hợp vào giao diện Dashboard trong vòng 5 ngày làm việc tiếp theo.
+
+\clearpage

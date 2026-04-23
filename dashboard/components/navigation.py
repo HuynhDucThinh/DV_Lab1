@@ -100,43 +100,36 @@ def _get_active_tab() -> str:
 
 def consume_header_actions() -> None:
     """
-    Process one-shot query-param actions:
-      ?cb=toggle  → flip colorblind_mode
-      ?sb=toggle  → flip sidebar_hidden
-    Both params are cleared after being consumed to avoid sticky state.
+    Restore persistent preferences from URL query params on every page load:
+      ?cb=1  → colorblind_mode = True
+      ?cb=0  → colorblind_mode = False  (explicit)
+      ?sb=1  → sidebar_hidden = True
+
+    These params are written by the sidebar toggle button and persist across
+    F5 refreshes while keeping the current tab intact.
     """
     use_modern_qp = hasattr(st, "query_params")
 
     if use_modern_qp:
-        cb_action = st.query_params.get("cb")
-        sb_action = st.query_params.get("sb")
+        cb_val = st.query_params.get("cb")
+        sb_val = st.query_params.get("sb")
     else:
         params = st.experimental_get_query_params()
-        cb_action = params.get("cb", [None])[0]
-        sb_action = params.get("sb", [None])[0]
+        cb_val = params.get("cb", [None])[0]
+        sb_val = params.get("sb", [None])[0]
 
-    changed = False
+    # Restore colorblind_mode from URL (only on first load or explicit param)
+    if cb_val == "1":
+        st.session_state["colorblind_mode"] = True
+    elif cb_val == "0":
+        st.session_state["colorblind_mode"] = False
+    elif "colorblind_mode" not in st.session_state:
+        # First ever load, no URL param → default off
+        st.session_state["colorblind_mode"] = False
 
-    if cb_action == "toggle":
-        st.session_state["colorblind_mode"] = not bool(
-            st.session_state.get("colorblind_mode", False)
-        )
-        changed = True
-
-    if sb_action == "toggle":
-        st.session_state["sidebar_hidden"] = not bool(
-            st.session_state.get("sidebar_hidden", False)
-        )
-        changed = True
-
-    if changed:
-        if use_modern_qp:
-            try:
-                st.query_params.clear()
-            except Exception:
-                pass
-        else:
-            st.experimental_set_query_params()
+    # Restore sidebar_hidden from URL
+    if sb_val == "1":
+        st.session_state["sidebar_hidden"] = True
 
 
 

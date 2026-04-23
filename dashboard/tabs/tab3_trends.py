@@ -1,15 +1,3 @@
-"""
-tab3_trends.py -- Tab 3: Characteristics & Trends
-
-Charts
-1. Tiki Product Stagnation Risk   (Pareto + Bubble)
-2. eBay Item Condition Analysis   (Treemap + Bar + ECDF)
-3. Cross-Platform Price KDE       (Overlapping density curves)
-4. eBay Listing Lifespan          (Lollipop Chart)
-
-Icons: Font Awesome 6 Free via CDN
-"""
-
 import streamlit as st
 import pandas as pd
 import numpy as np
