@@ -12,7 +12,7 @@ import streamlit as st
 from styles.html_blocks import make_hero_html
 
 
-# ── 1. Colorblind body-class injection ───────────────────────────────────────
+# 1. Colorblind body-class injection
 
 def inject_colorblind_class() -> None:
     """
@@ -28,7 +28,7 @@ def inject_colorblind_class() -> None:
     st.markdown(f"<script>{js}</script>", unsafe_allow_html=True)
 
 
-# ── 2. Hero banner ────────────────────────────────────────────────────────────
+# 2. Hero banner
 
 def render_hero() -> None:
     """
@@ -37,7 +37,7 @@ def render_hero() -> None:
     st.markdown(make_hero_html(), unsafe_allow_html=True)
 
 
-# ── 3. Show Panel trigger (only when sidebar is hidden) ───────────────────────
+# 3. Show Panel trigger (only when sidebar is hidden)
 
 def render_show_panel() -> None:
     """
@@ -66,7 +66,7 @@ def render_show_panel() -> None:
         st.rerun()
 
 
-# ── 4. Legacy sticky header (backward compat) ─────────────────────────────────
+# 4. Legacy sticky header (backward compat)
 
 def render_header() -> None:
     """
