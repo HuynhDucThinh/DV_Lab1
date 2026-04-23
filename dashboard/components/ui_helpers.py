@@ -1,6 +1,6 @@
 import streamlit as st
 
-# ── Colour defaults (used when no color argument is passed) ───────────────────
+# Colour defaults (used when no color argument is passed)
 _TEAL  = "#0d9488"
 _SLATE = "#94a3b8"
 _DARK  = "#0f172a"
