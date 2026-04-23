@@ -23,13 +23,11 @@ def apply_global_filters(
     Apply sidebar platform and price-range filters to both datasets.
 
     Parameters
-    ----------
     df_tiki   : Tiki fact table (must have a ``price`` column).
     df_ebay   : eBay fact table (must have a ``Total_Cost_VND`` column).
     filters   : dict returned by render_sidebar() — keys: ``platform``, ``price_range``.
 
     Returns
-    -------
     Filtered (df_tiki, df_ebay) copies.  Returns an empty Frame (iloc[0:0])
     for a platform that is not selected.
     """
