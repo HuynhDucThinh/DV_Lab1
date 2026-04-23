@@ -26,7 +26,7 @@ st.set_page_config(
 def main() -> None:
     # 1. Global CSS + icons
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
-    st.html(FA_HTML)
+    st.markdown(FA_HTML, unsafe_allow_html=True)
 
     # 2. Colorblind body class
     inject_colorblind_class()
