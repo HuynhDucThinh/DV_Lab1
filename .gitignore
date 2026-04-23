@@ -1,3 +1,6 @@
+# LaTeX report folder (local only)
+DV_Lab1/
+
 # Python
 __pycache__/
 *.py[cod]
