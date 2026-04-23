@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 from components.navigation import _get_active_tab
 
-# ── Sidebar widget dark-theme overrides ───────────────────────────────────────
+# Sidebar widget dark-theme overrides
 _SIDEBAR_CSS = """
 <style>
 /* Label text (Platform / Price Range) */
@@ -121,7 +121,7 @@ def render_sidebar() -> Dict[str, Any]:
     # Inject widget-only CSS overrides
     st.sidebar.markdown(_SIDEBAR_CSS, unsafe_allow_html=True)
 
-    # ── Brand header: logo+name (left) | ✕ Close (right) ────────────────────
+    # Brand header: logo+name (left) | ✕ Close (right)
     # Both in the same column row so ✕ appears level with "E-commerce Analytics"
     c_brand, c_close = st.sidebar.columns([5, 1])
 
@@ -192,7 +192,7 @@ def render_sidebar() -> Dict[str, Any]:
         unsafe_allow_html=True,
     )
 
-    # ── Section label: NAVIGATION ─────────────────────────────────────────────
+    # Section label: NAVIGATION
     st.sidebar.markdown(
         '<div style="font-size:0.62rem;font-weight:700;letter-spacing:0.12em;'
         'text-transform:uppercase;color:rgba(255,255,255,.28);'
@@ -236,7 +236,7 @@ def render_sidebar() -> Dict[str, Any]:
         unsafe_allow_html=True,
     )
 
-    # ── Section label: GLOBAL FILTERS ────────────────────────────────────────
+    # Section label: GLOBAL FILTERS
     st.sidebar.markdown(
         '<div style="font-size:0.62rem;font-weight:700;letter-spacing:0.12em;'
         'text-transform:uppercase;color:rgba(255,255,255,.28);'
@@ -265,7 +265,7 @@ def render_sidebar() -> Dict[str, Any]:
         help="Filter all listings by total price.",
     )
 
-    # ── Active scope summary ──────────────────────────────────────────────────
+    # Active scope summary
     lo_m, hi_m = price_range[0] / 1e6, price_range[1] / 1e6
 
     plat_parts = []
@@ -331,7 +331,7 @@ def render_sidebar() -> Dict[str, Any]:
         unsafe_allow_html=True,
     )
 
-    # ── Section label: DATASET ────────────────────────────────────────────────
+    # Section label: DATASET
     st.sidebar.markdown(
         '<div style="font-size:0.62rem;font-weight:700;letter-spacing:0.12em;'
         'text-transform:uppercase;color:rgba(255,255,255,.28);'
@@ -367,7 +367,7 @@ def render_sidebar() -> Dict[str, Any]:
         )
     st.sidebar.markdown(rows_html, unsafe_allow_html=True)
 
-    # ── Colorblind Mode Toggle ────────────────────────────────────────────────
+    # Colorblind Mode Toggle
     st.sidebar.markdown(
         '<div style="height:1px;background:linear-gradient(90deg,'
         'transparent,rgba(255,255,255,.09),transparent);'
@@ -383,7 +383,7 @@ def render_sidebar() -> Dict[str, Any]:
         st.session_state["colorblind_mode"] = not cb_on
         st.rerun()
 
-    # ── Footer ────────────────────────────────────────────────────────────────
+    # Footer
     st.sidebar.markdown(
         """
         <div style="margin-top:1.4rem;padding:0.85rem 0.5rem 0.6rem;
