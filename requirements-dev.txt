@@ -1,0 +1,38 @@
+# ============================================================
+# requirements-dev.txt — Local development & notebooks
+# Cài đặt đầy đủ để chạy notebooks, training, EDA
+#   pip install -r requirements-dev.txt
+# ============================================================
+
+# Thu thập dữ liệu
+requests==2.31.0
+
+# Xử lý dữ liệu
+pandas>=2.2.3
+numpy>=2.1.0
+openpyxl==3.1.2
+
+# Trực quan hóa (notebooks/EDA)
+matplotlib>=3.9.0
+seaborn>=0.13.2
+plotly>=5.19.0
+statsmodels>=0.14.4  # Required for trendline='ols' in plotly express
+
+# Dashboard
+streamlit>=1.40.0
+streamlit-shadcn-ui==0.1.19  # UI components: metric cards, tabs
+
+# Machine Learning (training + inference)
+scikit-learn>=1.6.0
+xgboost>=2.1.0
+shap>=0.46.0
+joblib>=1.4.0
+
+# LLM Explainer — install only the provider you use (all optional)
+openai>=1.0.0
+google-generativeai>=0.5.0
+anthropic>=0.20.0
+
+# Utilities
+python-dotenv==1.0.1
+tqdm>=4.66.2

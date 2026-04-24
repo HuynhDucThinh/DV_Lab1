@@ -38,9 +38,31 @@ INSTALL_HINTS = {
 
 
 def get_api_key(provider: str) -> str | None:
-    """Return the API key for a provider from the environment, or None if not set."""
+    """Return the API key for a provider.
+
+    Priority order:
+      1. Environment variable / .env file (local dev)
+      2. Streamlit secrets (Streamlit Cloud deployment)
+    """
     env_var = PROVIDER_ENV_KEYS.get(provider)
-    return os.getenv(env_var) if env_var else None
+    if not env_var:
+        return None
+
+    # 1. Try os.environ (loaded from .env via load_dotenv above)
+    value = os.getenv(env_var)
+    if value:
+        return value
+
+    # 2. Fallback: Streamlit secrets (only available when running inside Streamlit)
+    try:
+        import streamlit as st  # type: ignore[import-untyped]
+        value = st.secrets.get(env_var)
+        if value:
+            return value
+    except Exception:
+        pass
+
+    return None
 
 
 def detect_available_providers() -> list[str]:
