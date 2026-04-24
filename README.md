@@ -1,7 +1,7 @@
 # Lab 01 — Thu thập & Trực quan hóa Dữ liệu Thương mại Điện tử
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.56-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.40%2B-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![Plotly](https://img.shields.io/badge/Plotly-Interactive-3D4EAF?style=for-the-badge&logo=plotly&logoColor=white)
 ![XGBoost](https://img.shields.io/badge/XGBoost-ML%20Bonus-orange?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Completed-brightgreen?style=for-the-badge)
@@ -252,7 +252,8 @@ DV_Lab1/
 │   └── figures/
 │
 ├── .env.example                        # Mẫu cấu hình LLM API keys
-├── requirements.txt
+├── requirements.txt                    # Production — Streamlit Cloud deployment
+├── requirements-dev.txt                # Development — notebooks, training, EDA
 ├── .gitignore
 └── README.md
 ```
@@ -282,10 +283,21 @@ source venv/bin/activate
 
 ### Bước 3 — Cài đặt thư viện
 
+**Môi trường production (chỉ chạy dashboard):**
+
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
+
+**Môi trường development (notebooks + training + EDA):**
+
+```bash
+pip install --upgrade pip
+pip install -r requirements-dev.txt
+```
+
+> `requirements-dev.txt` bao gồm toàn bộ `requirements.txt` và bổ sung thêm: `matplotlib`, `seaborn`, `statsmodels`, `shap`, `openpyxl`, `requests`, `tqdm`.
 
 ### Bước 4 — Cấu hình LLM API Keys (tùy chọn)
 
@@ -337,16 +349,29 @@ python src/ml/ml_models.py
 
 ## 8. Công nghệ sử dụng
 
+### 8.1 Production (`requirements.txt`)
+
 | Nhóm | Thư viện | Phiên bản |
 |:---|:---|:---|
 | **Ngôn ngữ** | Python | 3.10+ |
-| **Thu thập dữ liệu** | `requests`, `beautifulsoup4`, `selenium`, `playwright` | — |
-| **Xử lý dữ liệu** | `pandas`, `numpy` | 2.2.1 / 1.26.4 |
-| **Trực quan hóa** | `plotly`, `matplotlib`, `seaborn` | 5.19 / 3.8.3 / 0.13.2 |
-| **Dashboard** | `streamlit`, `streamlit-shadcn-ui` | 1.31.1 / 0.1.19 |
-| **Machine Learning** | `xgboost`, `scikit-learn`, `shap`, `joblib` | 2.0.3 / 1.4.1 / 0.46 / 1.3.2 |
-| **LLM Providers** | `openai`, `google-generativeai`, `anthropic` | >= 1.0 / 0.8 / 0.20 |
-| **Utilities** | `tqdm`, `python-dotenv`, `statsmodels` | — |
+| **Xử lý dữ liệu** | `pandas`, `numpy` | ≥ 2.2.3 / ≥ 2.1.0 |
+| **Trực quan hóa** | `plotly` | ≥ 5.19.0 |
+| **Dashboard** | `streamlit`, `streamlit-shadcn-ui` | ≥ 1.40.0 / 0.1.19 |
+| **Machine Learning** | `xgboost`, `scikit-learn`, `joblib` | ≥ 2.1.0 / ≥ 1.6.0 / ≥ 1.4.0 |
+| **LLM Providers** | `openai`, `google-generativeai`, `anthropic` | ≥ 1.0.0 / ≥ 0.5.0 / ≥ 0.20.0 |
+| **Utilities** | `python-dotenv` | ≥ 1.0.1 |
+
+### 8.2 Development (`requirements-dev.txt`)
+
+> Bao gồm toàn bộ production + các thư viện bổ sung sau:
+
+| Nhóm | Thư viện | Phiên bản |
+|:---|:---|:---|
+| **Thu thập dữ liệu** | `requests` | 2.31.0 |
+| **Xử lý dữ liệu** | `openpyxl` | 3.1.2 |
+| **Trực quan hóa EDA** | `matplotlib`, `seaborn`, `statsmodels` | ≥ 3.9.0 / ≥ 0.13.2 / ≥ 0.14.4 |
+| **Machine Learning** | `shap` | ≥ 0.46.0 |
+| **Utilities** | `tqdm`, `python-dotenv` | ≥ 4.66.2 / 1.0.1 |
 
 ---
 
