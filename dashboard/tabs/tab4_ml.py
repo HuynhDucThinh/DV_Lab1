@@ -166,7 +166,7 @@ def _render_confusion_matrix(cm: np.ndarray) -> None:
         yaxis=dict(tickfont=dict(size=12), autorange="reversed"),
         font=dict(size=13),
     )
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
     c1, c2 = st.columns(2)
     with c1:
@@ -317,7 +317,7 @@ def _render_live_predictor(model, encoders: dict) -> None:
 
     res_col, detail_col = st.columns([1, 1])
     with res_col:
-        st.plotly_chart(fig_gauge, width="stretch")
+        st.plotly_chart(fig_gauge, use_container_width=True)
 
     with detail_col:
         st.markdown("<div style='margin-top:1rem;'>", unsafe_allow_html=True)

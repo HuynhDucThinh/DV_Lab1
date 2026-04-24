@@ -128,7 +128,7 @@ def _render_radar(
             x=0.5,
         ),
     )
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
     with st.expander("Chart 1 — Radar Interpretation"):
         st.markdown(
@@ -217,7 +217,7 @@ def _render_benchmark_bar(
         margin=dict(t=80, l=20, r=80, b=50),
         height=max(320, len(dims) * 72),
     )
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
     with st.expander("Chart 2 — Benchmark Analysis"):
         st.markdown(

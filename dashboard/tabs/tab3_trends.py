@@ -93,7 +93,7 @@ def render_tiki_cold_start(
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         height=550,
     )
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
     with st.expander("Chart Insights & Actionable Recommendations"):
         if len(plot_df) >= 3:
@@ -320,7 +320,7 @@ def render_ebay_condition_analysis(df_fact_ebay: pd.DataFrame) -> None:
             marker=dict(line=dict(color="white", width=2)),
         )
         fig_t.update_layout(margin=dict(t=0, l=0, r=0, b=0))
-        st.plotly_chart(fig_t, width="stretch")
+        st.plotly_chart(fig_t, use_container_width=True)
 
     with col_bar:
         st.markdown("**Average Total Cost by Condition (VND)**")
@@ -343,7 +343,7 @@ def render_ebay_condition_analysis(df_fact_ebay: pd.DataFrame) -> None:
             textposition="outside",
             textfont=dict(size=12, color="#334155"), cliponaxis=False,
         )
-        st.plotly_chart(fig_b, width="stretch")
+        st.plotly_chart(fig_b, use_container_width=True)
 
     with st.expander("Chart Insights & Actionable Recommendations"):
         if not cost.empty:
@@ -669,7 +669,7 @@ def render_price_kde_comparison(
         margin=dict(t=80, l=20, r=20, b=50),
         height=500, hovermode="x unified",
     )
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
     with st.expander("Descriptive Statistics & Competitive Analysis"):
         rows = []
@@ -686,7 +686,7 @@ def render_price_kde_comparison(
                 "P75 (M VND)":    f"{np.percentile(v, 75) / 1e6:.2f}",
                 "IQR (M VND)":    f"{iqr / 1e6:.2f}",
             })
-        st.dataframe(pd.DataFrame(rows).set_index("Group"), width="stretch")
+        st.dataframe(pd.DataFrame(rows).set_index("Group"), use_container_width=True)
 
         grp_list = list(group_data.keys())
         tiki_med = np.median(group_data[grp_list[0]])
@@ -920,7 +920,7 @@ def render_ebay_lollipop_lifespan(
         height=chart_height,
         plot_bgcolor="white",
     )
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
     # Colour legend — CSS spans + FA icons, no Unicode emoji
     st.markdown(

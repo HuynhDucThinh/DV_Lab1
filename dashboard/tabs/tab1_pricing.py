@@ -88,7 +88,7 @@ def render_tiki_price_segments(df_tiki: pd.DataFrame) -> None:
 			annotation_position="top left",
 		)
 		fig_hist.update_layout(template="plotly_white", bargap=0.05, margin=dict(t=60, l=20, r=20, b=20))
-		st.plotly_chart(fig_hist, width="stretch")
+		st.plotly_chart(fig_hist, use_container_width=True)
 
 	with chart_col2:
 		fig_box = px.box(
@@ -100,7 +100,7 @@ def render_tiki_price_segments(df_tiki: pd.DataFrame) -> None:
 			color_discrete_sequence=[pal["teal"]],
 		)
 		fig_box.update_layout(template="plotly_white", margin=dict(t=60, l=20, r=20, b=20), showlegend=False)
-		st.plotly_chart(fig_box, width="stretch")
+		st.plotly_chart(fig_box, use_container_width=True)
 
 	with st.expander("Chart 1A & 1B — Insights & Analytical Notes"):
 		skew_dir = "right-skewed (positive)" if p_mean > p_median else "left-skewed (negative)"
@@ -231,7 +231,7 @@ def render_tiki_discount_bestseller(df_tiki: pd.DataFrame) -> None:
 		legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
 		margin=dict(t=70, l=20, r=20, b=20),
 	)
-	st.plotly_chart(fig, width="stretch")
+	st.plotly_chart(fig, use_container_width=True)
 
 	with st.expander("Chart 2 — Insights & Actionable Recommendations"):
 		st.markdown(
@@ -349,7 +349,7 @@ def render_ebay_violin_box(df_ebay: pd.DataFrame) -> None:
 		yaxis_title="Total Cost (VND)",
 		margin=dict(t=70, l=20, r=20, b=20),
 	)
-	st.plotly_chart(fig, width="stretch")
+	st.plotly_chart(fig, use_container_width=True)
 
 	with st.expander("Chart 3A — Insights & Actionable Recommendations"):
 		if violin_stats:
@@ -447,7 +447,7 @@ The box alone would hide these nuances. A narrow violin at a price level = high 
 				margin=dict(t=60, l=20, r=60, b=20),
 				height=max(300, len(cat_stats) * 38),
 			)
-			st.plotly_chart(fig_cat, width="stretch")
+			st.plotly_chart(fig_cat, use_container_width=True)
 
 			with st.expander("Chart 3B — Top-3 Category Insights"):
 				st.markdown(
@@ -542,7 +542,7 @@ def render_ebay_price_shipping_boundary(df_ebay: pd.DataFrame) -> None:
 			yaxis_title="Average Cost (USD)",
 			margin=dict(t=70, l=20, r=20, b=20),
 		)
-		st.plotly_chart(fig_stacked, width="stretch")
+		st.plotly_chart(fig_stacked, use_container_width=True)
 
 	with right_col:
 		sampled = df_vis.sample(n=min(max_points, len(df_vis)), random_state=42)
@@ -573,7 +573,7 @@ def render_ebay_price_shipping_boundary(df_ebay: pd.DataFrame) -> None:
 			bgcolor="#ffffff",
 		)
 		fig_scatter.update_layout(template="plotly_white", margin=dict(t=70, l=20, r=20, b=20))
-		st.plotly_chart(fig_scatter, width="stretch")
+		st.plotly_chart(fig_scatter, use_container_width=True)
 
 
 	with st.expander("Chart 4A & 4B - Insights & Actionable Recommendations"):
@@ -678,7 +678,7 @@ that price segment.
 					margin=dict(t=60, l=20, r=80, b=20),
 					height=max(300, len(ship_by_cat) * 38),
 				)
-				st.plotly_chart(fig_ship, width="stretch")
+				st.plotly_chart(fig_ship, use_container_width=True)
 
 				with st.expander("Chart 4C - Top-3 Shipping Category Insights"):
 					st.markdown(
