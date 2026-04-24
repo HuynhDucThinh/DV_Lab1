@@ -203,13 +203,13 @@ def _render_model_plots() -> None:
         with st.container(border=True):
             st.markdown("**ROC-AUC Curve**")
             st.caption("Area under curve = 0.915 — model strongly separates Best Seller vs Non Best Seller")
-            st.image(str(_ROC_PATH), use_container_width=True)
+            st.image(str(_ROC_PATH))
 
     with col_shap:
         with st.container(border=True):
             st.markdown("**SHAP Feature Importance**")
             st.caption("Higher |SHAP value| = greater impact on prediction. Dots colored by feature value.")
-            st.image(str(_SHAP_PATH), use_container_width=True)
+            st.image(str(_SHAP_PATH))
 
     with st.expander("How to read these charts"):
         st.markdown("""
