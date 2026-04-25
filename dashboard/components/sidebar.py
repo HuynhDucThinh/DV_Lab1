@@ -376,7 +376,7 @@ def render_sidebar() -> Dict[str, Any]:
     )
 
     cb_on = bool(st.session_state.get("colorblind_mode", False))
-    cb_label = "👁  Mù màu: Bật" if cb_on else "👁  Mù màu: Tắt"
+    cb_label = "Mù màu: Bật" if cb_on else "Mù màu: Tắt"
     cb_help  = "Nhấn để tắt chế độ mù màu" if cb_on else "Nhấn để bật chế độ mù màu (Deuteranopia-safe)"
 
     if st.sidebar.button(cb_label, key="cb_toggle_btn", help=cb_help, use_container_width=True):
