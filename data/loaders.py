@@ -1,32 +1,56 @@
-"""
-Compatibility shim — repo-root/data/loaders.py
-================================================
-Streamlit Cloud puts the repo root on sys.path, so Python resolves
-`data` as this package (repo-root/data/) instead of dashboard/data/.
+import os
+import streamlit as st
+import pandas as pd
 
-This shim loads the *real* loaders.py directly from dashboard/data/
-using importlib so there is no circular-import risk, then re-exports
-every public function into this module's namespace.
-"""
-import os as _os, sys as _sys, importlib.util as _ilu
+# dv_lab1/data/processed/ — đường dẫn tuyệt đối tính từ file này
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "processed")
 
-_REAL_FILE = _os.path.normpath(
-    _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
-                  "..", "dashboard", "data", "loaders.py")
-)
 
-# Make sure dashboard/ is on sys.path (needed by loaders.py → config.py)
-_DASHBOARD = _os.path.dirname(_os.path.dirname(_REAL_FILE))
-if _DASHBOARD not in _sys.path:
-    _sys.path.insert(0, _DASHBOARD)
+@st.cache_data
+def load_tiki_ebay() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Return (fact_tiki_listings, fact_ebay_listings) — used by tab1."""
+    df_tiki = pd.read_csv(f"{DATA_DIR}/fact_tiki_listings.csv", dtype={"product_id": str})
+    df_ebay = pd.read_csv(f"{DATA_DIR}/fact_ebay_listings.csv", dtype={"product_id": str})
+    return df_tiki, df_ebay
 
-# Load the real module without touching sys.modules['data.loaders']
-_spec = _ilu.spec_from_file_location("_data_loaders_real", _REAL_FILE)
-_mod  = _ilu.module_from_spec(_spec)
-_spec.loader.exec_module(_mod)
 
-# Re-export everything
-load_tiki_ebay = _mod.load_tiki_ebay  # noqa: F401
-load_4_tables  = _mod.load_4_tables   # noqa: F401
-load_5_tables  = _mod.load_5_tables   # noqa: F401
-load_kpi_data  = _mod.load_kpi_data   # noqa: F401
+@st.cache_data
+def load_4_tables() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Return (fact_tiki, fact_ebay, dim_product, dim_category) — used by tab0 and tab3."""
+    df_tiki     = pd.read_csv(f"{DATA_DIR}/fact_tiki_listings.csv", dtype={"product_id": str})
+    df_ebay     = pd.read_csv(f"{DATA_DIR}/fact_ebay_listings.csv", dtype={"product_id": str})
+    df_product  = pd.read_csv(f"{DATA_DIR}/dim_product.csv",        dtype={"product_id": str})
+    df_category = pd.read_csv(f"{DATA_DIR}/dim_category.csv")
+    return df_tiki, df_ebay, df_product, df_category
+
+
+@st.cache_data
+def load_5_tables() -> tuple[
+    pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame
+]:
+    """Return (fact_tiki, fact_ebay, dim_product, dim_category, dim_seller) — used by tab2."""
+    df_tiki     = pd.read_csv(f"{DATA_DIR}/fact_tiki_listings.csv", dtype={"product_id": str})
+    df_ebay     = pd.read_csv(f"{DATA_DIR}/fact_ebay_listings.csv", dtype={"product_id": str})
+    df_product  = pd.read_csv(f"{DATA_DIR}/dim_product.csv",        dtype={"product_id": str})
+    df_category = pd.read_csv(f"{DATA_DIR}/dim_category.csv")
+    df_seller   = pd.read_csv(f"{DATA_DIR}/dim_seller.csv")
+    return df_tiki, df_ebay, df_product, df_category, df_seller
+
+
+@st.cache_data
+def load_kpi_data() -> dict:
+    """Compute platform-level KPI metrics for the hero card row in app.py."""
+    df_t = pd.read_csv(f"{DATA_DIR}/fact_tiki_listings.csv", dtype={"product_id": str})
+    df_e = pd.read_csv(f"{DATA_DIR}/fact_ebay_listings.csv", dtype={"product_id": str})
+    df_s = pd.read_csv(f"{DATA_DIR}/dim_seller.csv")
+
+    tiki_p = pd.to_numeric(df_t["price"],          errors="coerce").dropna()
+    ebay_p = pd.to_numeric(df_e["Total_Cost_VND"], errors="coerce").dropna()
+    disc   = pd.to_numeric(df_t["discount_rate"],  errors="coerce")
+
+    return {
+        "total":        len(df_t) + len(df_e),
+        "sellers":      len(df_s),
+        "median_price": pd.concat([tiki_p, ebay_p]).median(),
+        "disc_pct":     (disc > 0).mean() * 100,
+    }

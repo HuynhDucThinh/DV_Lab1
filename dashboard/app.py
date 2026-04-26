@@ -2,17 +2,17 @@ import os
 import sys
 import importlib
 
-# On Streamlit Cloud the CWD is the repo root, not dashboard/.
-# Inserting dashboard/ at index 0 ensures all sibling packages
-# (data, components, styles, config) are importable regardless of CWD.
-_DASHBOARD_DIR = os.path.dirname(os.path.abspath(__file__))
-if _DASHBOARD_DIR not in sys.path:
-    sys.path.insert(0, _DASHBOARD_DIR)
-os.chdir(_DASHBOARD_DIR)
+# ── Đường dẫn ──────────────────────────────────────────────────────────────
+_DASHBOARD_DIR = os.path.dirname(os.path.abspath(__file__))          # dv_lab1/dashboard/
+_ROOT_DIR      = os.path.abspath(os.path.join(_DASHBOARD_DIR, "..")) # dv_lab1/
 
-# Clear any stale 'data' package that Streamlit may have cached from the
-# repo root before dashboard/ was inserted.  After this, the next
-# `from data.loaders import …` finds dashboard/data/ (sys.path[0]) first.
+# Thêm ROOT vào sys.path[0] → Python tìm thấy dv_lab1/data/loaders.py
+# Thêm DASHBOARD vào sys.path[1] → Python tìm thấy styles/, components/, tabs/
+for _p in [_DASHBOARD_DIR, _ROOT_DIR]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
+# Xóa cache 'data' cũ để Python resolve lại từ dv_lab1/data/
 for _k in list(sys.modules):
     if _k == "data" or _k.startswith("data."):
         sys.modules.pop(_k)

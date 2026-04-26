@@ -1,32 +1,71 @@
-"""
-Compatibility shim — repo-root/data/filters.py
-================================================
-Streamlit Cloud puts the repo root on sys.path, so Python resolves
-`data` as this package (repo-root/data/) instead of dashboard/data/.
+import pandas as pd
+from typing import Dict, Any, List, Tuple
 
-This shim loads the *real* filters.py directly from dashboard/data/
-using importlib so there is no circular-import risk, then re-exports
-every public function into this module's namespace.
-"""
-import os as _os, sys as _sys, importlib.util as _ilu
 
-_REAL_FILE = _os.path.normpath(
-    _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
-                  "..", "dashboard", "data", "filters.py")
-)
+def clean_numeric(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
+    """
+    Coerce *cols* to numeric in-place and drop rows where coercion fails.
+    Rows with NaN in any of the specified columns are removed.
+    """
+    out = df.copy()
+    for col in cols:
+        if col in out.columns:
+            out[col] = pd.to_numeric(out[col], errors="coerce")
+    return out.dropna(subset=cols)
 
-# Make sure dashboard/ is on sys.path
-_DASHBOARD = _os.path.dirname(_os.path.dirname(_REAL_FILE))
-if _DASHBOARD not in _sys.path:
-    _sys.path.insert(0, _DASHBOARD)
 
-# Load the real module without touching sys.modules['data.filters']
-_spec = _ilu.spec_from_file_location("_data_filters_real", _REAL_FILE)
-_mod  = _ilu.module_from_spec(_spec)
-_spec.loader.exec_module(_mod)
+def apply_global_filters(
+    df_tiki: pd.DataFrame,
+    df_ebay: pd.DataFrame,
+    filters: Dict[str, Any],
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Apply sidebar platform and price-range filters to both datasets.
+    """
+    selected_platforms = filters.get("platform", ["Tiki", "eBay"])
+    min_price, max_price = filters.get("price_range", (0, 50_000_000))
 
-# Re-export everything
-clean_numeric            = _mod.clean_numeric             # noqa: F401
-apply_global_filters     = _mod.apply_global_filters      # noqa: F401
-simplify_ebay_condition  = _mod.simplify_ebay_condition   # noqa: F401
-simplify_condition_short = _mod.simplify_condition_short  # noqa: F401
+    if "Tiki" in selected_platforms:
+        tiki_out = df_tiki[
+            (df_tiki["price"] >= min_price) & (df_tiki["price"] <= max_price)
+        ].copy()
+    else:
+        tiki_out = df_tiki.iloc[0:0].copy()
+
+    if "eBay" in selected_platforms:
+        ebay_out = df_ebay[
+            (df_ebay["Total_Cost_VND"] >= min_price)
+            & (df_ebay["Total_Cost_VND"] <= max_price)
+        ].copy()
+    else:
+        ebay_out = df_ebay.iloc[0:0].copy()
+
+    return tiki_out, ebay_out
+
+
+def simplify_ebay_condition(cond: str) -> str | None:
+    c = str(cond).lower().strip()
+    if c == "new" or any(k in c for k in ["brand new", "new with tags", "new other", "nuovo", "neu"]):
+        return "eBay — New"
+    if any(k in c for k in ["used", "usato"]):
+        return "eBay — Used"
+    if any(k in c for k in [
+        "refurbished", "open box", "opened", "certified",
+        "good -", "excellent -", "very good -",
+    ]):
+        return "eBay — Refurb / Open Box"
+    return None
+
+
+def simplify_condition_short(cond: str) -> str | None:
+    c = str(cond).lower().strip()
+    if c == "new" or any(k in c for k in ["brand new", "new with tags", "new other"]):
+        return "New"
+    if any(k in c for k in ["used", "usato"]):
+        return "Used"
+    if any(k in c for k in [
+        "refurbished", "open box", "opened", "certified",
+        "good -", "excellent -", "very good -",
+    ]):
+        return "Refurbished"
+    return None
