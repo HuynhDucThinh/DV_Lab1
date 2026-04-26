@@ -1,5 +1,15 @@
 """components — Reusable Streamlit UI building blocks."""
 
+# Path bootstrap (Streamlit Cloud fix)
+# Streamlit Cloud adds the REPO ROOT to sys.path, not dashboard/.
+# We must insert dashboard/ here so sibling packages (data, config, styles)
+# are importable when this __init__ is first imported.
+import sys as _sys, os as _os
+_DASHBOARD_DIR = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+if _DASHBOARD_DIR not in _sys.path:
+    _sys.path.insert(0, _DASHBOARD_DIR)
+del _sys, _os, _DASHBOARD_DIR
+
 from .ui_helpers  import icon_header, fa_callout, stat_card
 from .sidebar     import render_sidebar
 from .header      import inject_colorblind_class, render_hero, render_show_panel, render_header
