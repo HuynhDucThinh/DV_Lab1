@@ -1,5 +1,13 @@
 import os
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+import sys
+
+# On Streamlit Cloud the CWD is the repo root, not dashboard/.
+# Inserting dashboard/ at index 0 ensures all sibling packages
+# (data, components, styles, config) are importable regardless of CWD.
+_DASHBOARD_DIR = os.path.dirname(os.path.abspath(__file__))
+if _DASHBOARD_DIR not in sys.path:
+    sys.path.insert(0, _DASHBOARD_DIR)
+os.chdir(_DASHBOARD_DIR)
 
 import streamlit as st
 
