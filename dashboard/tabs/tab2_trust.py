@@ -4,7 +4,15 @@ import numpy as np
 import plotly.graph_objects as go
 from typing import Dict, Any
 
-
+from components.ui_helpers import icon_header as _icon_header, fa_callout as _fa_callout
+from data.filters import clean_numeric, apply_global_filters
+from config import (
+    TEAL as _TEAL, ORANGE as _ORANGE, BLUE as _BLUE, SLATE as _SLATE,
+    DARK as _DARK, AMBER as _AMBER, GREEN as _GREEN, INDIGO as _INDIGO,
+    RED as _RED, RATING_BINS as _RATING_BINS, RATING_LABELS as _RATING_LABELS,
+    RATING_COLORS as _RATING_COLORS, EBAY_TIERS as _EBAY_TIERS,
+    EBAY_COLORS as _EBAY_COLORS, get_chart_palette as _get_palette,
+)
 
 def _hex_to_rgba(hex_color: str, alpha: float = 0.15) -> str:
     """Convert #rrggbb to rgba(r,g,b,alpha)."""
@@ -490,16 +498,7 @@ def render(filters: Dict[str, Any]) -> None:
     Section 2: eBay seller trust tiers × price distribution (Obj 8)
     """
     # ── Lazy imports ──────────────────────────────────────────────────────────
-    from components.ui_helpers import icon_header as _icon_header, fa_callout as _fa_callout
     from data.loaders import load_5_tables
-    from data.filters import clean_numeric, apply_global_filters
-    from config import (
-        TEAL as _TEAL, ORANGE as _ORANGE, BLUE as _BLUE, SLATE as _SLATE,
-        DARK as _DARK, AMBER as _AMBER, GREEN as _GREEN, INDIGO as _INDIGO,
-        RED as _RED, RATING_BINS as _RATING_BINS, RATING_LABELS as _RATING_LABELS,
-        RATING_COLORS as _RATING_COLORS, EBAY_TIERS as _EBAY_TIERS,
-        EBAY_COLORS as _EBAY_COLORS, get_chart_palette as _get_palette,
-    )
     # ─────────────────────────────────────────────────────────────────────────
     _icon_header("fa-solid fa-shield-halved", "Trust &amp; Reputation", level=2)
 

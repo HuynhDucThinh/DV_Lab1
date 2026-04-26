@@ -5,6 +5,17 @@ import plotly.express as px
 import plotly.graph_objects as go
 from typing import Tuple, Dict, Any
 
+from components.ui_helpers    import icon_header as _icon_header, fa_callout as _fa_callout
+from components.chart_helpers import compute_kde as _compute_kde, age_to_color as _age_to_color
+from data.filters import (
+    clean_numeric, apply_global_filters,
+    simplify_ebay_condition as _simplify_ebay_condition,
+)
+from config import (
+    REFERENCE_DATE as _REFERENCE_DATE, TECH_KEYWORDS as _TECH_KEYWORDS,
+    get_chart_palette as _get_palette,
+)
+
 
 
 # Section 1 -- Tiki Product Stagnation Risk (Obj 5)
@@ -981,17 +992,7 @@ def render(filters: Dict[str, Any]) -> None:
     Section 4: eBay listing lifespan — Lollipop chart (Obj 10)
     """
     # ── Lazy imports ──────────────────────────────────────────────────────────
-    from components.ui_helpers    import icon_header as _icon_header, fa_callout as _fa_callout
-    from components.chart_helpers import compute_kde as _compute_kde, age_to_color as _age_to_color
     from data.loaders import load_4_tables
-    from data.filters import (
-        clean_numeric, apply_global_filters,
-        simplify_ebay_condition as _simplify_ebay_condition,
-    )
-    from config import (
-        REFERENCE_DATE as _REFERENCE_DATE, TECH_KEYWORDS as _TECH_KEYWORDS,
-        get_chart_palette as _get_palette,
-    )
     # ─────────────────────────────────────────────────────────────────────────
     _icon_header(
         "fa-solid fa-chart-line",

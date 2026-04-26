@@ -4,6 +4,10 @@ import numpy as np
 import plotly.graph_objects as go
 from typing import Dict, Any
 
+from components.ui_helpers import icon_header as _icon_header
+from data.filters import clean_numeric, apply_global_filters
+from config import TEAL as _TEAL, ORANGE as _ORANGE, SLATE as _SLATE, get_chart_palette as _get_palette
+
 
 # Helpers 
 
@@ -241,10 +245,7 @@ Buyers can use this to choose the platform that best aligns with their purchasin
 def render(filters: Dict[str, Any]) -> None:
     """Main rendering entrypoint for Tab 4: Summary & Conclusion."""
     # ── Lazy imports ──────────────────────────────────────────────────────────
-    from components.ui_helpers import icon_header as _icon_header
     from data.loaders import load_5_tables
-    from data.filters import clean_numeric, apply_global_filters
-    from config import TEAL as _TEAL, ORANGE as _ORANGE, SLATE as _SLATE, get_chart_palette as _get_palette
     # ─────────────────────────────────────────────────────────────────────────
     _icon_header("fa-solid fa-flag-checkered", "Summary &amp; Conclusion", level=2)
 
