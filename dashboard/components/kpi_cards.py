@@ -1,9 +1,6 @@
 import streamlit as st
 import streamlit_shadcn_ui as ui
 
-from data.loaders import load_kpi_data
-from styles import KPI_HEADER
-
 
 def render_kpi_cards() -> None:
     """
@@ -11,6 +8,11 @@ def render_kpi_cards() -> None:
       • Section label (KPI_HEADER HTML)
       • 4-column metric card row: Total Listings, eBay Sellers, Median Price, Tiki Promotions
     """
+    # Lazy imports — deferred until call time so sys.path bootstrap in app.py
+    # has already run, avoiding ModuleNotFoundError on Streamlit Cloud.
+    from data.loaders import load_kpi_data  # noqa: PLC0415
+    from styles import KPI_HEADER           # noqa: PLC0415
+
     st.markdown(KPI_HEADER, unsafe_allow_html=True)
 
     kpi = load_kpi_data()

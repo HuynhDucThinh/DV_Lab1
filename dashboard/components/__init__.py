@@ -1,14 +1,19 @@
 """components — Reusable Streamlit UI building blocks."""
 
-# Path bootstrap (Streamlit Cloud fix)
-# Streamlit Cloud adds the REPO ROOT to sys.path, not dashboard/.
-# We must insert dashboard/ here so sibling packages (data, config, styles)
-# are importable when this __init__ is first imported.
+# ── Path bootstrap (Streamlit Cloud fix) ─────────────────────────────────────
+# Streamlit Cloud sets CWD = repo root, not dashboard/.  We insert dashboard/
+# at sys.path[0] AND evict any stale namespace-package ghost that Python may
+# have already cached for the repo-root data/ folder (no __init__.py there).
 import sys as _sys, os as _os
 _DASHBOARD_DIR = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
 if _DASHBOARD_DIR not in _sys.path:
     _sys.path.insert(0, _DASHBOARD_DIR)
-del _sys, _os, _DASHBOARD_DIR
+# Evict cached namespace-package entries so they are re-resolved from the
+# correct dashboard/data/ package on the next import.
+_stale = ("data", "data.loaders", "data.filters", "config", "styles")
+for _mod in _stale:
+    _sys.modules.pop(_mod, None)
+del _sys, _os, _DASHBOARD_DIR, _stale, _mod
 
 from .ui_helpers  import icon_header, fa_callout, stat_card
 from .sidebar     import render_sidebar
