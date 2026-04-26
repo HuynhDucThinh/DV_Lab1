@@ -1,5 +1,6 @@
 import os
 import sys
+import importlib
 
 # On Streamlit Cloud the CWD is the repo root, not dashboard/.
 # Inserting dashboard/ at index 0 ensures all sibling packages
@@ -8,6 +9,14 @@ _DASHBOARD_DIR = os.path.dirname(os.path.abspath(__file__))
 if _DASHBOARD_DIR not in sys.path:
     sys.path.insert(0, _DASHBOARD_DIR)
 os.chdir(_DASHBOARD_DIR)
+
+# Clear any stale 'data' package that Streamlit may have cached from the
+# repo root before dashboard/ was inserted.  After this, the next
+# `from data.loaders import …` finds dashboard/data/ (sys.path[0]) first.
+for _k in list(sys.modules):
+    if _k == "data" or _k.startswith("data."):
+        sys.modules.pop(_k)
+importlib.invalidate_caches()
 
 import streamlit as st
 
