@@ -5,16 +5,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from typing import Dict, Any
 
-from components.ui_helpers import icon_header as _icon_header
-from data.loaders import load_5_tables
-from data.filters import clean_numeric, apply_global_filters
-from config import (
-	TEAL as _TEAL, ORANGE as _ORANGE, BLUE as _BLUE,
-	SLATE as _SLATE, DARK as _DARK,
-	get_chart_palette as _get_palette,
-)
-
-
 def _enrich_ebay_for_tab1(
 	df_ebay: pd.DataFrame,
 	df_product: pd.DataFrame,
@@ -708,6 +698,15 @@ Sellers in these categories could gain competitive advantage by offering free or
 
 def render(filters: Dict[str, Any]) -> None:
 	"""Main rendering entrypoint for Tab 1: Pricing & Promotions."""
+	# ── Lazy imports ──────────────────────────────────────────────────────────
+	from components.ui_helpers import icon_header as _icon_header
+	from data.loaders import load_5_tables
+	from data.filters import clean_numeric, apply_global_filters
+	from config import (
+		TEAL as _TEAL, ORANGE as _ORANGE, BLUE as _BLUE,
+		SLATE as _SLATE, DARK as _DARK, get_chart_palette as _get_palette,
+	)
+	# ─────────────────────────────────────────────────────────────────────────
 	_icon_header("fa-solid fa-tags", "Pricing &amp; Promotions", level=2)
 	with st.expander("About this tab"):
 		st.markdown("""

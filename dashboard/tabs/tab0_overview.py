@@ -5,24 +5,6 @@ import plotly.graph_objects as go
 import plotly.express as px
 from typing import Dict, Any
 
-from components.ui_helpers import icon_header as _icon_header
-from data.loaders import load_4_tables
-from data.filters import simplify_condition_short as _simplify_condition
-from config import (
-    TEAL as _TEAL,
-    ORANGE as _ORANGE,
-    BLUE as _BLUE,
-    PURPLE as _PURPLE,
-    RED as _RED,
-    SLATE as _SLATE,
-    DARK as _DARK,
-    AMBER as _AMBER,
-    GREEN as _GREEN,
-    get_chart_palette as _get_palette,
-)
-
-
-
 # Section 1 - Dataset Snapshot
 def _render_dataset_snapshot(
     df_t: pd.DataFrame,
@@ -723,6 +705,16 @@ def render(filters: Dict[str, Any]) -> None:
     Overview tab — renders all five analytical sections in sequence.
     Each section answers one focused research question about the Tiki x eBay market.
     """
+    # ── Lazy imports (Streamlit Cloud: internal packages only safe at call time) ─
+    from components.ui_helpers import icon_header as _icon_header          # noqa: E402
+    from data.loaders import load_4_tables                                  # noqa: E402
+    from data.filters import simplify_condition_short as _simplify_condition# noqa: E402
+    from config import (                                                     # noqa: E402
+        TEAL as _TEAL, ORANGE as _ORANGE, BLUE as _BLUE, PURPLE as _PURPLE,
+        RED as _RED, SLATE as _SLATE, DARK as _DARK, AMBER as _AMBER,
+        GREEN as _GREEN, get_chart_palette as _get_palette,
+    )
+    # ─────────────────────────────────────────────────────────────────────────
 
     _icon_header("fa-solid fa-gauge-high", "Market Overview Dashboard", level=2, color=_TEAL)
     with st.expander("About this dashboard"):
