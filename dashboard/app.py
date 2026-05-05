@@ -6,13 +6,18 @@ import importlib
 _DASHBOARD_DIR = os.path.dirname(os.path.abspath(__file__))          # dv_lab1/dashboard/
 _ROOT_DIR      = os.path.abspath(os.path.join(_DASHBOARD_DIR, "..")) # dv_lab1/
 
-# Thêm ROOT vào sys.path[0] → Python tìm thấy dv_lab1/data/loaders.py
-# Thêm DASHBOARD vào sys.path[1] → Python tìm thấy styles/, components/, tabs/
+# ROOT phải được thêm TRƯỚC DASHBOARD để `import data` luôn resolve về
+# dv_lab1/data/ (root package) thay vì dv_lab1/dashboard/data/ (dashboard package).
+# DASHBOARD được thêm sau để styles/, components/, tabs/, config còn resolve được.
 for _p in [_DASHBOARD_DIR, _ROOT_DIR]:
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
+    if _p in sys.path:
+        sys.path.remove(_p)
 
-# Xóa cache 'data' cũ để Python resolve lại từ dv_lab1/data/
+# Insert ROOT trước (index 0), DASHBOARD sau (index 1)
+sys.path.insert(0, _DASHBOARD_DIR)
+sys.path.insert(0, _ROOT_DIR)
+
+# Xóa toàn bộ cache của package 'data' và các sub-module liên quan
 for _k in list(sys.modules):
     if _k == "data" or _k.startswith("data."):
         sys.modules.pop(_k)
